@@ -25,3 +25,26 @@
 ** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ****************************************************************************/
+
+#include <feed/parser.h>
+
+namespace feed {
+parser::parser(const std::string &uri) {
+    web::http::client::http_client client(
+        utility::conversions::to_string_t(uri), http_client_config_);
+    const auto response = client.request(web::http::methods::GET);
+    ucout << response.get().extract_string().get() << std::endl;
+}
+
+bool parser::set_proxy(const std::string &uri) {
+    try {
+        http_client_config_.set_proxy(web::web_proxy(uri));
+
+        return true;
+    } catch (const web::uri_exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    return false;
+}
+}

@@ -35,4 +35,8 @@
 **
 ****************************************************************************/
 
-int main(int argc, char *argv[]) { ; }
+#include <feed/parser.h>
+
+int main(int argc, char *argv[]) {
+    feed::parser("https://ipn.li/kernelpanic/feed");
+}

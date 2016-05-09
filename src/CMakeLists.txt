@@ -2,6 +2,7 @@ add_library(${FEED_PARSER_LIBRARY} parser.cc)
 
 target_link_libraries(${FEED_PARSER_LIBRARY}
   ${OPENSSL_LIBRARIES}
+  ${PugiXML_LIBRARIES}
   ${CASABLANCA_LIBRARIES}
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_THREAD_LIBRARY}

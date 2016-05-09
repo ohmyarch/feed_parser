@@ -29,6 +29,7 @@ elseif(WIN32)
 endif()
 
 find_package(Threads REQUIRED)
+find_package(PugiXML REQUIRED)
 find_package(Casablanca 2.8.0 REQUIRED)
 
 if(BUILD_EXAMPLES)
@@ -40,7 +41,7 @@ endif()
 file(GLOB_RECURSE HEADER_FILES *.h)
 add_custom_target(headers SOURCES ${HEADER_FILES})
 
-include_directories(${CMAKE_SOURCE_DIR} ${OPENSSL_INCLUDE_DIR} ${CASABLANCA_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR} ${OPENSSL_INCLUDE_DIR} ${PugiXML_INCLUDE_DIR} ${CASABLANCA_INCLUDE_DIRS})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   message("-- Setting clang options")

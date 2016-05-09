@@ -25,3 +25,20 @@
 ** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ****************************************************************************/
+
+#pragma once
+
+#include <string>
+#include <cpprest/http_client.h>
+
+namespace feed {
+class parser {
+  public:
+    parser(const std::string &uri);
+
+    bool set_proxy(const std::string &uri);
+
+  protected:
+    web::http::client::http_client_config http_client_config_;
+};
+}
