@@ -28,13 +28,19 @@
 
 #pragma once
 
-#include <string>
+#include <boost/optional.hpp>
 #include <cpprest/http_client.h>
+#include <string>
 
 namespace feed {
+class data {
+  public:
+  private:
+};
+
 class parser {
   public:
-    parser(const std::string &uri);
+    boost::optional<data> parse(const std::string &uri);
 
     bool set_proxy(const std::string &uri);
 

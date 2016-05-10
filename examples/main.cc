@@ -38,5 +38,13 @@
 #include <feed/parser.h>
 
 int main(int argc, char *argv[]) {
-    feed::parser("https://ipn.li/kernelpanic/feed");
+    feed::parser parser;
+    const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
+    if (!feed) {
+        std::cout << "Failed." << std::endl;
+
+        return 1;
+    }
+
+    ;
 }

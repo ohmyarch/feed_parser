@@ -26,19 +26,37 @@
 **
 ****************************************************************************/
 
+#include <boost/property_tree/xml_parser.hpp>
+#include <cpprest/details/basic_types.h>
 #include <feed/parser.h>
 
 namespace feed {
-parser::parser(const std::string &uri) {
+boost::optional<data> parser::parse(const std::string &uri) {
     web::http::client::http_client client(
         utility::conversions::to_string_t(uri), http_client_config_);
     const auto response = client.request(web::http::methods::GET);
-    ucout << response.get().extract_string().get() << std::endl;
+
+    boost::property_tree::ptree root;
+
+    try {
+        utility::istringstream_t stream(response.get().extract_string().get());
+
+        boost::property_tree::read_xml(stream, root);
+
+        auto rss_node = root.get_child("rss");
+        auto channel_node = rss_node.get_child("channel");
+        channel_node.get<std::string>("title");
+    } catch (const web::http::http_exception &e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    } catch (const std::exception &e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
 }
 
 bool parser::set_proxy(const std::string &uri) {
     try {
-        http_client_config_.set_proxy(web::web_proxy(utility::conversions::to_string_t(uri)));
+        http_client_config_.set_proxy(
+            web::web_proxy(utility::conversions::to_string_t(uri)));
 
         return true;
     } catch (const web::uri_exception &e) {
