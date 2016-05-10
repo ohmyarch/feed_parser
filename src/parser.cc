@@ -38,7 +38,7 @@ parser::parser(const std::string &uri) {
 
 bool parser::set_proxy(const std::string &uri) {
     try {
-        http_client_config_.set_proxy(web::web_proxy(uri));
+        http_client_config_.set_proxy(web::web_proxy(utility::conversions::to_string_t(uri)));
 
         return true;
     } catch (const web::uri_exception &e) {
