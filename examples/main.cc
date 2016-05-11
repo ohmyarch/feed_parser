@@ -41,11 +41,13 @@ int main(int argc, char *argv[]) {
     feed::parser parser;
     const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
     if (!feed) {
-        std::cout << "Failed." << std::endl;
+        std::cerr << "Failed." << std::endl;
 
         return 1;
     }
 
     std::cout << "channel:" << std::endl
-              << "  title: " << feed->title() << std::endl;
+              << "  title: " << feed->title() << std::endl
+              << "  link: " << feed->link() << std::endl
+              << "  description: " << feed->description() << std::endl;
 }

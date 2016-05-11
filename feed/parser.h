@@ -35,9 +35,13 @@
 namespace feed {
 class data {
   public:
-    data(data &&other) noexcept : title_(std::move(other.title_)) {}
+    data(data &&other) noexcept
+        : title_(std::move(other.title_)), link_(std::move(other.link_)),
+          description_(std::move(other.description_)) {}
 
     const std::string &title() const { return title_; }
+    const std::string &link() const { return link_; }
+    const std::string &description() const { return description_; }
 
   private:
     friend class parser;
@@ -45,6 +49,8 @@ class data {
     data() {}
 
     std::string title_;
+    std::string link_;
+    std::string description_;
 };
 
 class parser {

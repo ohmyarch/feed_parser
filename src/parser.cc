@@ -49,12 +49,14 @@ boost::optional<data> parser::parse(const std::string &uri) {
 
         auto channel_node = rss_node.get_child("channel");
         data.title_ = channel_node.get<std::string>("title");
+        data.link_ = channel_node.get<std::string>("link");
+        data.description_ = channel_node.get<std::string>("description");
 
         return data;
     } catch (const web::http::http_exception &e) {
-        std::cout << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
     } catch (const std::exception &e) {
-        std::cout << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
     }
 
     return {};
