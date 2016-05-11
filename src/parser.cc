@@ -38,19 +38,26 @@ boost::optional<data> parser::parse(const std::string &uri) {
 
     boost::property_tree::ptree root;
 
+    data data;
+
     try {
         utility::istringstream_t stream(response.get().extract_string().get());
 
         boost::property_tree::read_xml(stream, root);
 
         auto rss_node = root.get_child("rss");
+
         auto channel_node = rss_node.get_child("channel");
-        channel_node.get<std::string>("title");
+        data.title_ = channel_node.get<std::string>("title");
+
+        return data;
     } catch (const web::http::http_exception &e) {
         std::cout << "Error: " << e.what() << std::endl;
     } catch (const std::exception &e) {
         std::cout << "Error: " << e.what() << std::endl;
     }
+
+    return {};
 }
 
 bool parser::set_proxy(const std::string &uri) {

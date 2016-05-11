@@ -46,5 +46,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    ;
+    std::cout << "channel:" << std::endl
+              << "  title: " << feed->title() << std::endl;
 }

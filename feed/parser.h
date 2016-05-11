@@ -35,7 +35,16 @@
 namespace feed {
 class data {
   public:
+    data(data &&other) noexcept : title_(std::move(other.title_)) {}
+
+    const std::string &title() const { return title_; }
+
   private:
+    friend class parser;
+
+    data() {}
+
+    std::string title_;
 };
 
 class parser {
