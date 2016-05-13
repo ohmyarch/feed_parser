@@ -58,8 +58,16 @@ boost::optional<data> parser::parse(const std::string &uri) {
                 auto item_node = child.second;
                 item.title_ = item_node.get_optional<std::string>("title");
                 item.link_ = item_node.get_optional<std::string>("link");
-                item.description_ = item_node.get_optional<std::string>("description");
+                item.description_ =
+                    item_node.get_optional<std::string>("description");
                 item.author_ = item_node.get_optional<std::string>("author");
+
+                auto enclosure_node =
+                    item_node.get_child("enclosure.<xmlattr>");
+                item.enclosure_ =
+                    enclosure(enclosure_node.get<std::string>("url"),
+                              enclosure_node.get<std::string>("type"));
+
                 data.items_.emplace_back(std::move(item));
             }
 

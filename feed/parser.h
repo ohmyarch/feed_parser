@@ -35,14 +35,43 @@
 namespace feed {
 class image {};
 
+class enclosure {
+  public:
+    enclosure(enclosure &&other) noexcept
+        : url_(std::move(other.url_)), type_(std::move(other.type_)) {}
+
+    const std::string &url() const { return url_; }
+    const std::string &type() const { return type_; }
+
+    enclosure &operator=(enclosure &&other) noexcept {
+        if (&other != this) {
+            url_ = std::move(other.url_);
+            type_ = std::move(other.type_);
+        }
+
+        return *this;
+    }
+
+  private:
+    friend class parser;
+
+    enclosure(std::string &&url, std::string &&type) noexcept
+        : url_(std::move(url)), type_(std::move(type)) {}
+
+    // std::uint64_t length_; // How big it is in bytes
+    std::string url_;  // Where the enclosure is located.
+    std::string type_; // What its type is, a standard MIME type.
+};
+
 // All elements of an item are optional, however at least one of title or
 // description must be present.
 class item {
   public:
-    item(item &&other) noexcept : title_(std::move(other.title_)),
-                                  link_(std::move(other.link_)),
-                                  description_(std::move(other.description_)),
-                                  author_(std::move(other.author_)) {}
+    item(item &&other) noexcept
+        : title_(std::move(other.title_)), link_(std::move(other.link_)),
+          description_(std::move(other.description_)),
+          author_(std::move(other.author_)),
+          enclosure_(std::move(other.enclosure_)) {}
 
     const boost::optional<std::string> &title() const { return title_; }
     const boost::optional<std::string> &link() const { return link_; }
@@ -50,8 +79,9 @@ class item {
         return description_;
     }
     const boost::optional<std::string> &author() const { return author_; }
-    // const boost::optional<std::string> &enclosure() const { return
-    // enclosure_; }
+    const boost::optional<class enclosure> &enclosure() const {
+        return enclosure_;
+    }
 
   private:
     friend class parser;
@@ -63,16 +93,17 @@ class item {
     boost::optional<std::string> description_; // The item synopsis.
     boost::optional<std::string>
         author_; // Email address of the author of the item.
-    // boost::optional<std::string>
-    //     enclosure_; // Describes a media object that is attached to the item.
+    boost::optional<class enclosure>
+        enclosure_; // Describes a media object that
+                    // is attached to the item.
 };
 
 class data {
   public:
-    data(data &&other) noexcept : title_(std::move(other.title_)),
-                                  link_(std::move(other.link_)),
-                                  description_(std::move(other.description_)),
-                                  items_(std::move(other.items_)) {}
+    data(data &&other) noexcept
+        : title_(std::move(other.title_)), link_(std::move(other.link_)),
+          description_(std::move(other.description_)),
+          items_(std::move(other.items_)) {}
 
     const std::string &title() const { return title_; }
     const std::string &link() const { return link_; }

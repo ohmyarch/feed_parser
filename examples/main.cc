@@ -37,6 +37,21 @@
 
 #include <feed/parser.h>
 
+inline void open_url(const std::string &uri) {
+#if defined(_WIN32) && !defined(__cplusplus_winrt)
+    // NOTE: Windows desktop only.
+    ShellExecuteA(NULL, "open", uri.c_str(), NULL, NULL, SW_SHOWNORMAL);
+#elif defined(__APPLE__)
+    // NOTE: OS X only.
+    std::string command("open \"" + uri + "\" > /dev/null 2>&1");
+    std::system(command.c_str());
+#else
+    // NOTE: Linux/X11 only.
+    std::string command("xdg-open \"" + uri + "\" > /dev/null 2>&1");
+    std::system(command.c_str());
+#endif
+}
+
 int main(int argc, char *argv[]) {
     feed::parser parser;
     const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
@@ -52,20 +67,33 @@ int main(int argc, char *argv[]) {
               << "  description: " << feed->description() << std::endl
               << "  items:" << std::endl;
 
+    std::vector<std::string> urls;
+
     for (const auto &item : feed->items()) {
         std::cout << "    item:" << std::endl;
-        auto title = item.title();
+        const auto &title = item.title();
         if (title)
-            std::cout << "      title:" << title.value() << std::endl;
-        auto link = item.link();
+            std::cout << "      title: " << title.value() << std::endl;
+        const auto &link = item.link();
         if (link)
-            std::cout << "      link:" << link.value() << std::endl;
-        // auto description = item.description();
+            std::cout << "      link: " << link.value() << std::endl;
+        // const auto description = item.description();
         // if (description)
-        // std::cout << "      description:" << description.value()
+        // std::cout << "      description: " << description.value()
         //            << std::endl;
-        auto author = item.author();
-        if (title)
-            std::cout << "      author:" << author.value() << std::endl;
+        const auto &enclosure = item.enclosure();
+        if (enclosure) {
+            std::cout << "      enclosure:" << std::endl
+                      << "        url: " << enclosure->url() << std::endl
+                      << "        type: " << enclosure->type() << std::endl;
+
+            urls.emplace_back(enclosure->url());
+        }
+        const auto &author = item.author();
+        if (author)
+            std::cout << "      author: " << author.value() << std::endl;
     }
+
+    if (!urls.empty())
+        open_url(urls.front());
 }
