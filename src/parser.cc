@@ -52,6 +52,17 @@ boost::optional<data> parser::parse(const std::string &uri) {
         data.link_ = channel_node.get<std::string>("link");
         data.description_ = channel_node.get<std::string>("description");
 
+        for (const auto &child : channel_node)
+            if (child.first == "item") {
+                item item;
+                auto item_node = child.second;
+                item.title_ = item_node.get_optional<std::string>("title");
+                item.link_ = item_node.get_optional<std::string>("link");
+                item.description_ = item_node.get_optional<std::string>("description");
+                item.author_ = item_node.get_optional<std::string>("author");
+                data.items_.emplace_back(std::move(item));
+            }
+
         return data;
     } catch (const web::http::http_exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;

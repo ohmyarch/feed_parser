@@ -49,5 +49,23 @@ int main(int argc, char *argv[]) {
     std::cout << "channel:" << std::endl
               << "  title: " << feed->title() << std::endl
               << "  link: " << feed->link() << std::endl
-              << "  description: " << feed->description() << std::endl;
+              << "  description: " << feed->description() << std::endl
+              << "  items:" << std::endl;
+
+    for (const auto &item : feed->items()) {
+        std::cout << "    item:" << std::endl;
+        auto title = item.title();
+        if (title)
+            std::cout << "      title:" << title.value() << std::endl;
+        auto link = item.link();
+        if (link)
+            std::cout << "      link:" << link.value() << std::endl;
+        // auto description = item.description();
+        // if (description)
+        // std::cout << "      description:" << description.value()
+        //            << std::endl;
+        auto author = item.author();
+        if (title)
+            std::cout << "      author:" << author.value() << std::endl;
+    }
 }
