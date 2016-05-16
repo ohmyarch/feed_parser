@@ -71,7 +71,7 @@ boost::optional<data> parser::parse(const std::string &uri) {
                 data.items_.emplace_back(std::move(item));
             }
 
-        return data;
+        return std::move(data);
     } catch (const web::http::http_exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
     } catch (const std::exception &e) {
