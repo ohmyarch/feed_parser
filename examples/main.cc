@@ -54,7 +54,7 @@ inline void open_url(const std::string &uri) {
 
 int main(int argc, char *argv[]) {
     feed::parser parser;
-    const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
+    const auto feed = parser.parse("http://cppcast.libsyn.com/rss");
     if (!feed) {
         std::cerr << "Failed." << std::endl;
 
@@ -64,8 +64,28 @@ int main(int argc, char *argv[]) {
     std::cout << "channel:" << std::endl
               << "  title: " << feed->title() << std::endl
               << "  link: " << feed->link() << std::endl
-              << "  description: " << feed->description() << std::endl
-              << "  items:" << std::endl;
+              << "  description: " << feed->description() << std::endl;
+
+    const auto &image = feed->image();
+    if (image) {
+        std::cout << "  image:" << std::endl
+                  << "    url: " << image->url() << std::endl
+                  << "    title: " << image->title() << std::endl
+                  << "    link: " << image->link() << std::endl;
+
+        const auto &width = image->width();
+        if (width)
+            std::cout << "    width: " << width.value() << std::endl;
+        const auto &height = image->height();
+        if (height)
+            std::cout << "    height: " << height.value() << std::endl;
+        const auto &description = image->description();
+        if (description)
+            std::cout << "    description: " << description.value()
+                      << std::endl;
+    }
+
+    std::cout << "  items:" << std::endl;
 
     std::vector<std::string> urls;
 
@@ -84,8 +104,13 @@ int main(int argc, char *argv[]) {
         const auto &enclosure = item.enclosure();
         if (enclosure) {
             std::cout << "      enclosure:" << std::endl
-                      << "        url: " << enclosure->url() << std::endl
-                      << "        type: " << enclosure->type() << std::endl;
+                      << "        url: " << enclosure->url() << std::endl;
+
+            const auto &length = enclosure->length();
+            if (length)
+                std::cout << "        length: " << length.value() << std::endl;
+
+            std::cout << "        type: " << enclosure->type() << std::endl;
 
             urls.emplace_back(enclosure->url());
         }

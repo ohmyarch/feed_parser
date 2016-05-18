@@ -33,14 +33,59 @@
 #include <string>
 
 namespace feed {
-class image {};
+class image {
+  public:
+    image(image &&other) noexcept
+        : url_(std::move(other.url_)),
+          title_(std::move(other.title_)),
+          link_(std::move(other.link_)),
+          width_(std::move(other.width_)),
+          height_(std::move(other.height_)),
+          description_(std::move(other.description_)) {}
+
+    const std::string &url() const { return url_; }
+    const std::string &title() const { return title_; }
+    const std::string &link() const { return link_; }
+    const boost::optional<std::uint16_t> &width() const { return width_; }
+    const boost::optional<std::uint16_t> &height() const { return height_; }
+    const boost::optional<std::string> &description() const {
+        return description_;
+    }
+
+    image &operator=(image &&other) noexcept {
+        if (&other != this) {
+            url_ = std::move(other.url_);
+            title_ = std::move(other.title_);
+            link_ = std::move(other.link_);
+            width_ = std::move(other.width_);
+            height_ = std::move(other.height_);
+            description_ = std::move(other.description_);
+        }
+
+        return *this;
+    }
+
+  private:
+    friend class parser;
+
+    image() {}
+
+    std::string url_;
+    std::string title_;
+    std::string link_;
+    boost::optional<std::uint16_t> width_;
+    boost::optional<std::uint16_t> height_;
+    boost::optional<std::string> description_;
+};
 
 class enclosure {
   public:
-    enclosure(enclosure &&other) noexcept
-        : url_(std::move(other.url_)), type_(std::move(other.type_)) {}
+    enclosure(enclosure &&other) noexcept : url_(std::move(other.url_)),
+                                            length_(std::move(other.length_)),
+                                            type_(std::move(other.type_)) {}
 
     const std::string &url() const { return url_; }
+    const boost::optional<std::uint64_t> &length() const { return length_; }
     const std::string &type() const { return type_; }
 
     enclosure &operator=(enclosure &&other) noexcept {
@@ -55,11 +100,13 @@ class enclosure {
   private:
     friend class parser;
 
-    enclosure(std::string &&url, std::string &&type) noexcept
-        : url_(std::move(url)), type_(std::move(type)) {}
+    enclosure(std::string &&url, boost::optional<std::uint64_t> &&length,
+              std::string &&type) noexcept : url_(std::move(url)),
+                                             length_(std::move(length)),
+                                             type_(std::move(type)) {}
 
-    // std::uint64_t length_; // How big it is in bytes
-    std::string url_;  // Where the enclosure is located.
+    std::string url_;                       // Where the enclosure is located.
+    boost::optional<std::uint64_t> length_; // How big it is in bytes
     std::string type_; // What its type is, a standard MIME type.
 };
 
@@ -67,11 +114,11 @@ class enclosure {
 // description must be present.
 class item {
   public:
-    item(item &&other) noexcept
-        : title_(std::move(other.title_)), link_(std::move(other.link_)),
-          description_(std::move(other.description_)),
-          author_(std::move(other.author_)),
-          enclosure_(std::move(other.enclosure_)) {}
+    item(item &&other) noexcept : title_(std::move(other.title_)),
+                                  link_(std::move(other.link_)),
+                                  description_(std::move(other.description_)),
+                                  author_(std::move(other.author_)),
+                                  enclosure_(std::move(other.enclosure_)) {}
 
     const boost::optional<std::string> &title() const { return title_; }
     const boost::optional<std::string> &link() const { return link_; }
@@ -100,14 +147,16 @@ class item {
 
 class data {
   public:
-    data(data &&other) noexcept
-        : title_(std::move(other.title_)), link_(std::move(other.link_)),
-          description_(std::move(other.description_)),
-          items_(std::move(other.items_)) {}
+    data(data &&other) noexcept : title_(std::move(other.title_)),
+                                  link_(std::move(other.link_)),
+                                  description_(std::move(other.description_)),
+                                  image_(std::move(other.image_)),
+                                  items_(std::move(other.items_)) {}
 
     const std::string &title() const { return title_; }
     const std::string &link() const { return link_; }
     const std::string &description() const { return description_; }
+    const boost::optional<class image> &image() const { return image_; }
 
     const std::vector<item> &items() const { return items_; }
 
@@ -133,6 +182,9 @@ class data {
     boost::optional<std::string> docs_;      // A URL that points to the
     // documentation for the format used in
     // the RSS file.
+    boost::optional<class image> image_; // Specifies a GIF, JPEG or PNG image
+                                         // that can be displayed with the
+                                         // channel.
 
     std::vector<item> items_;
 };

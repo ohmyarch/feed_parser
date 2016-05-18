@@ -41,32 +41,48 @@ boost::optional<data> parser::parse(const std::string &uri) {
     data data;
 
     try {
-        utility::istringstream_t stream(response.get().extract_string().get());
+        utility::istringstream_t stream(
+            response.get().extract_string(true).get());
 
         boost::property_tree::read_xml(stream, root);
 
-        auto rss_node = root.get_child("rss");
+        const auto &rss_node = root.get_child("rss");
 
-        auto channel_node = rss_node.get_child("channel");
+        const auto &channel_node = rss_node.get_child("channel");
         data.title_ = channel_node.get<std::string>("title");
         data.link_ = channel_node.get<std::string>("link");
         data.description_ = channel_node.get<std::string>("description");
 
+        const auto &image_node = channel_node.get_child_optional("image");
+        if (image_node) {
+            image image;
+            image.url_ = image_node->get<std::string>("url");
+            image.title_ = image_node->get<std::string>("title");
+            image.link_ = image_node->get<std::string>("link");
+            image.width_ = image_node->get_optional<std::uint16_t>("width");
+            image.height_ = image_node->get_optional<std::uint16_t>("height");
+            image.description_ =
+                image_node->get_optional<std::string>("description");
+
+            data.image_ = std::move(image);
+        }
+
         for (const auto &child : channel_node)
             if (child.first == "item") {
                 item item;
-                auto item_node = child.second;
+                const auto &item_node = child.second;
                 item.title_ = item_node.get_optional<std::string>("title");
                 item.link_ = item_node.get_optional<std::string>("link");
                 item.description_ =
                     item_node.get_optional<std::string>("description");
                 item.author_ = item_node.get_optional<std::string>("author");
 
-                auto enclosure_node =
+                const auto &enclosure_node =
                     item_node.get_child("enclosure.<xmlattr>");
-                item.enclosure_ =
-                    enclosure(enclosure_node.get<std::string>("url"),
-                              enclosure_node.get<std::string>("type"));
+                item.enclosure_ = enclosure(
+                    enclosure_node.get<std::string>("url"),
+                    enclosure_node.get_optional<std::uint64_t>("length"),
+                    enclosure_node.get<std::string>("type"));
 
                 data.items_.emplace_back(std::move(item));
             }
