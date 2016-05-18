@@ -78,6 +78,25 @@ class image {
     boost::optional<std::string> description_;
 };
 
+class category {
+  public:
+    category(category &&other) noexcept : value_(std::move(other.value_)),
+                                          domain_(std::move(other.value_)) {}
+
+    const std::string &value() const { return value_; }
+    const std::string &domain() const { return domain_; }
+
+  private:
+    friend class parser;
+
+    category(std::string &&value, std::string &&domain) noexcept
+        : value_(std::move(value)),
+          domain_(std::move(domain)) {}
+
+    std::string value_;
+    std::string domain_; // A string that identifies a categorization taxonomy.
+};
+
 class enclosure {
   public:
     enclosure(enclosure &&other) noexcept : url_(std::move(other.url_)),
@@ -118,6 +137,7 @@ class item {
                                   link_(std::move(other.link_)),
                                   description_(std::move(other.description_)),
                                   author_(std::move(other.author_)),
+                                  category_(std::move(other.category_)),
                                   enclosure_(std::move(other.enclosure_)) {}
 
     const boost::optional<std::string> &title() const { return title_; }
@@ -126,6 +146,9 @@ class item {
         return description_;
     }
     const boost::optional<std::string> &author() const { return author_; }
+    const boost::optional<std::vector<class category>> &category() const {
+        return category_;
+    }
     const boost::optional<class enclosure> &enclosure() const {
         return enclosure_;
     }
@@ -140,6 +163,8 @@ class item {
     boost::optional<std::string> description_; // The item synopsis.
     boost::optional<std::string>
         author_; // Email address of the author of the item.
+    boost::optional<std::vector<class category>>
+        category_; // Includes the item in one or more categories.
     boost::optional<class enclosure>
         enclosure_; // Describes a media object that
                     // is attached to the item.
