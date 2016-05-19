@@ -80,21 +80,20 @@ class image {
 
 class category {
   public:
+    category(std::string &&value,
+             boost::optional<std::string> &&domain) noexcept
+        : value_(std::move(value)),
+          domain_(std::move(domain)) {}
     category(category &&other) noexcept : value_(std::move(other.value_)),
                                           domain_(std::move(other.value_)) {}
 
     const std::string &value() const { return value_; }
-    const std::string &domain() const { return domain_; }
+    const boost::optional<std::string> &domain() const { return domain_; }
 
   private:
-    friend class parser;
-
-    category(std::string &&value, std::string &&domain) noexcept
-        : value_(std::move(value)),
-          domain_(std::move(domain)) {}
-
     std::string value_;
-    std::string domain_; // A string that identifies a categorization taxonomy.
+    boost::optional<std::string>
+        domain_; // A string that identifies a categorization taxonomy.
 };
 
 class enclosure {
@@ -129,6 +128,36 @@ class enclosure {
     std::string type_; // What its type is, a standard MIME type.
 };
 
+class guid {
+  public:
+    guid(guid &&other) noexcept : value_(std::move(other.value_)),
+                                  is_perma_link_(other.is_perma_link_) {}
+
+    const std::string &value() const { return value_; }
+    bool is_perma_link() const { return is_perma_link_; }
+
+    guid &operator=(guid &&other) noexcept {
+        if (&other != this) {
+            value_ = std::move(other.value_);
+            is_perma_link_ = other.is_perma_link_;
+        }
+
+        return *this;
+    }
+
+  private:
+    friend class parser;
+
+    guid(std::string &&value,
+         const boost::optional<bool> &is_perma_link) noexcept
+        : value_(std::move(value)),
+          is_perma_link_(is_perma_link ? is_perma_link.value() : true) {}
+
+    std::string value_;
+    bool is_perma_link_; // If its value is false, the guid may not be assumed
+                         // to be a url, or a url to anything in particular.
+};
+
 // All elements of an item are optional, however at least one of title or
 // description must be present.
 class item {
@@ -137,8 +166,10 @@ class item {
                                   link_(std::move(other.link_)),
                                   description_(std::move(other.description_)),
                                   author_(std::move(other.author_)),
-                                  category_(std::move(other.category_)),
-                                  enclosure_(std::move(other.enclosure_)) {}
+                                  categories_(std::move(other.categories_)),
+                                  comments_(std::move(other.comments_)),
+                                  enclosure_(std::move(other.enclosure_)),
+                                  guid_(std::move(other.guid_)) {}
 
     const boost::optional<std::string> &title() const { return title_; }
     const boost::optional<std::string> &link() const { return link_; }
@@ -146,12 +177,14 @@ class item {
         return description_;
     }
     const boost::optional<std::string> &author() const { return author_; }
-    const boost::optional<std::vector<class category>> &category() const {
-        return category_;
+    const boost::optional<std::vector<class category>> &categories() const {
+        return categories_;
     }
+    const boost::optional<std::string> &comments() const { return comments_; }
     const boost::optional<class enclosure> &enclosure() const {
         return enclosure_;
     }
+    const boost::optional<class guid> &guid() const { return guid_; }
 
   private:
     friend class parser;
@@ -164,10 +197,14 @@ class item {
     boost::optional<std::string>
         author_; // Email address of the author of the item.
     boost::optional<std::vector<class category>>
-        category_; // Includes the item in one or more categories.
+        categories_; // Includes the item in one or more categories.
+    boost::optional<std::string>
+        comments_; // URL of a page for comments relating to the item.
     boost::optional<class enclosure>
         enclosure_; // Describes a media object that
                     // is attached to the item.
+    boost::optional<class guid>
+        guid_; // A string that uniquely identifies the item.
 };
 
 class data {

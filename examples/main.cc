@@ -101,6 +101,12 @@ int main(int argc, char *argv[]) {
         // if (description)
         // std::cout << "      description: " << description.value()
         //            << std::endl;
+        const auto &guid = item.guid();
+        if (guid) {
+            std::cout << "      guid: " << guid->value() << std::endl
+                      << "        is_perma_link: " << std::boolalpha
+                      << guid->is_perma_link() << std::endl;
+        }
         const auto &enclosure = item.enclosure();
         if (enclosure) {
             std::cout << "      enclosure:" << std::endl

@@ -53,7 +53,7 @@ boost::optional<data> parser::parse(const std::string &uri) {
         data.link_ = channel_node.get<std::string>("link");
         data.description_ = channel_node.get<std::string>("description");
 
-        const auto &image_node = channel_node.get_child_optional("image");
+        const auto image_node = channel_node.get_child_optional("image");
         if (image_node) {
             image image;
             image.url_ = image_node->get<std::string>("url");
@@ -67,15 +67,32 @@ boost::optional<data> parser::parse(const std::string &uri) {
             data.image_ = std::move(image);
         }
 
-        for (const auto &child : channel_node)
-            if (child.first == "item") {
+        for (const auto &channel_child : channel_node)
+            if (channel_child.first == "item") {
                 item item;
-                const auto &item_node = child.second;
+                const auto &item_node = channel_child.second;
                 item.title_ = item_node.get_optional<std::string>("title");
                 item.link_ = item_node.get_optional<std::string>("link");
                 item.description_ =
                     item_node.get_optional<std::string>("description");
                 item.author_ = item_node.get_optional<std::string>("author");
+
+                std::vector<category> categories_;
+
+                for (const auto &item_child : item_node)
+                    if (item_child.first == "category") {
+                        const auto &category_node = item_child.second;
+                        categories_.emplace_back(
+                            category_node.get_value<std::string>(),
+                            category_node.get_optional<std::string>(
+                                "<xmlattr>.domain"));
+                    }
+
+                if (!categories_.empty())
+                    item.categories_ = std::move(categories_);
+
+                item.comments_ =
+                    item_node.get_optional<std::string>("comments");
 
                 const auto &enclosure_node =
                     item_node.get_child("enclosure.<xmlattr>");
@@ -83,6 +100,12 @@ boost::optional<data> parser::parse(const std::string &uri) {
                     enclosure_node.get<std::string>("url"),
                     enclosure_node.get_optional<std::uint64_t>("length"),
                     enclosure_node.get<std::string>("type"));
+
+                const auto guid_node = item_node.get_child_optional("guid");
+                if (guid_node)
+                    item.guid_ = guid(
+                        guid_node->get_value<std::string>(),
+                        guid_node->get_optional<bool>("<xmlattr>.isPermaLink"));
 
                 data.items_.emplace_back(std::move(item));
             }
