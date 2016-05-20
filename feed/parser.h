@@ -158,6 +158,34 @@ class guid {
                          // to be a url, or a url to anything in particular.
 };
 
+class source {
+  public:
+    source(source &&other) noexcept : value_(std::move(other.value_)),
+                                      url_(std::move(other.url_)) {}
+
+    const std::string &value() const { return value_; }
+    const std::string &url() const { return url_; }
+
+    source &operator=(source &&other) noexcept {
+        if (&other != this) {
+            value_ = std::move(other.value_);
+            url_ = std::move(other.url_);
+        }
+
+        return *this;
+    }
+
+  private:
+    friend class parser;
+
+    source(std::string &&value, std::string &&url) noexcept
+        : value_(std::move(value)),
+          url_(std::move(url)) {}
+
+    std::string value_;
+    std::string url_;
+};
+
 // All elements of an item are optional, however at least one of title or
 // description must be present.
 class item {
@@ -169,7 +197,9 @@ class item {
                                   categories_(std::move(other.categories_)),
                                   comments_(std::move(other.comments_)),
                                   enclosure_(std::move(other.enclosure_)),
-                                  guid_(std::move(other.guid_)) {}
+                                  guid_(std::move(other.guid_)),
+                                  pub_date_(other.pub_date_),
+                                  source_(std::move(other.source_)) {}
 
     const boost::optional<std::string> &title() const { return title_; }
     const boost::optional<std::string> &link() const { return link_; }
@@ -185,6 +215,12 @@ class item {
         return enclosure_;
     }
     const boost::optional<class guid> &guid() const { return guid_; }
+    const boost::optional<std::chrono::time_point<std::chrono::system_clock,
+                                                  std::chrono::seconds>> &
+    pub_date() const {
+        return pub_date_;
+    }
+    const boost::optional<class source> &source() const { return source_; }
 
   private:
     friend class parser;
@@ -205,6 +241,11 @@ class item {
                     // is attached to the item.
     boost::optional<class guid>
         guid_; // A string that uniquely identifies the item.
+    boost::optional<std::chrono::time_point<std::chrono::system_clock,
+                                            std::chrono::seconds>>
+        pub_date_;
+    boost::optional<class source>
+        source_; // The RSS channel that the item came from.
 };
 
 class data {

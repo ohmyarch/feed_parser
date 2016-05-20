@@ -35,6 +35,7 @@
 **
 ****************************************************************************/
 
+#include <feed/date_time/tz.h>
 #include <feed/parser.h>
 
 inline void open_url(const std::string &uri) {
@@ -54,75 +55,78 @@ inline void open_url(const std::string &uri) {
 
 int main(int argc, char *argv[]) {
     feed::parser parser;
-    const auto feed = parser.parse("http://cppcast.libsyn.com/rss");
+    const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
     if (!feed) {
-        std::cerr << "Failed." << std::endl;
+        std::cerr << "Failed.\n";
 
         return 1;
     }
 
-    std::cout << "channel:" << std::endl
-              << "  title: " << feed->title() << std::endl
-              << "  link: " << feed->link() << std::endl
-              << "  description: " << feed->description() << std::endl;
+    std::cout << "channel:\n"
+              << "  title: " << feed->title() << '\n'
+              << "  link: " << feed->link() << '\n'
+              << "  description: " << feed->description() << '\n';
 
     const auto &image = feed->image();
     if (image) {
-        std::cout << "  image:" << std::endl
-                  << "    url: " << image->url() << std::endl
-                  << "    title: " << image->title() << std::endl
-                  << "    link: " << image->link() << std::endl;
+        std::cout << "  image:\n"
+                  << "    url: " << image->url() << '\n'
+                  << "    title: " << image->title() << '\n'
+                  << "    link: " << image->link() << '\n';
 
         const auto &width = image->width();
         if (width)
-            std::cout << "    width: " << width.value() << std::endl;
+            std::cout << "    width: " << width.value() << '\n';
         const auto &height = image->height();
         if (height)
-            std::cout << "    height: " << height.value() << std::endl;
+            std::cout << "    height: " << height.value() << '\n';
         const auto &description = image->description();
         if (description)
-            std::cout << "    description: " << description.value()
-                      << std::endl;
+            std::cout << "    description: " << description.value() << '\n';
     }
 
-    std::cout << "  items:" << std::endl;
+    std::cout << "  items:\n";
 
     std::vector<std::string> urls;
 
     for (const auto &item : feed->items()) {
-        std::cout << "    item:" << std::endl;
+        std::cout << "    item:\n";
         const auto &title = item.title();
         if (title)
-            std::cout << "      title: " << title.value() << std::endl;
+            std::cout << "      title: " << title.value() << '\n';
         const auto &link = item.link();
         if (link)
-            std::cout << "      link: " << link.value() << std::endl;
+            std::cout << "      link: " << link.value() << '\n';
         // const auto description = item.description();
         // if (description)
         // std::cout << "      description: " << description.value()
-        //            << std::endl;
-        const auto &guid = item.guid();
-        if (guid) {
-            std::cout << "      guid: " << guid->value() << std::endl
-                      << "        is_perma_link: " << std::boolalpha
-                      << guid->is_perma_link() << std::endl;
-        }
+        //            << '\n';
+        const auto &author = item.author();
+        if (author)
+            std::cout << "      author: " << author.value() << '\n';
         const auto &enclosure = item.enclosure();
         if (enclosure) {
-            std::cout << "      enclosure:" << std::endl
-                      << "        url: " << enclosure->url() << std::endl;
+            std::cout << "      enclosure:\n"
+                      << "        url: " << enclosure->url() << '\n';
 
             const auto &length = enclosure->length();
             if (length)
-                std::cout << "        length: " << length.value() << std::endl;
+                std::cout << "        length: " << length.value() << '\n';
 
-            std::cout << "        type: " << enclosure->type() << std::endl;
+            std::cout << "        type: " << enclosure->type() << '\n';
 
             urls.emplace_back(enclosure->url());
         }
-        const auto &author = item.author();
-        if (author)
-            std::cout << "      author: " << author.value() << std::endl;
+        const auto &guid = item.guid();
+        if (guid)
+            std::cout << "      guid: " << guid->value() << '\n'
+                      << "        is_perma_link: " << std::boolalpha
+                      << guid->is_perma_link() << '\n';
+        const auto &pub_date = item.pub_date();
+        if (pub_date)
+            std::cout << "      pub_date: "
+                      << date::format("%A %F %T %z %Z", pub_date.value())
+                      << '\n';
     }
 
     if (!urls.empty())

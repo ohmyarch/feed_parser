@@ -28,6 +28,7 @@
 
 #include <boost/property_tree/xml_parser.hpp>
 #include <cpprest/details/basic_types.h>
+#include <feed/date_time/tz.h>
 #include <feed/parser.h>
 
 namespace feed {
@@ -41,10 +42,12 @@ boost::optional<data> parser::parse(const std::string &uri) {
     data data;
 
     try {
+        // FIXME
         utility::istringstream_t stream(
             response.get().extract_string(true).get());
 
         boost::property_tree::read_xml(stream, root);
+        // boost::property_tree::read_xml("//home//michael//feed.xml", root);
 
         const auto &rss_node = root.get_child("rss");
 
@@ -106,6 +109,30 @@ boost::optional<data> parser::parse(const std::string &uri) {
                     item.guid_ = guid(
                         guid_node->get_value<std::string>(),
                         guid_node->get_optional<bool>("<xmlattr>.isPermaLink"));
+
+                const auto &pub_date =
+                    item_node.get_optional<std::string>("pubDate");
+                if (pub_date) {
+                    const std::string &pub_date_value = pub_date.value();
+                    // TODO: Error Handling
+                    const auto pos = pub_date_value.find_last_of(' ');
+                    const std::string utc_offset =
+                        pub_date_value.substr(pos + 1);
+                    std::string time_str;
+                    if (utc_offset == "GMT" || utc_offset == "UTC" ||
+                        utc_offset == "UT")
+                        ;
+                    std::istringstream time_stream(time_str);
+                    date::second_point time_point;
+                    date::parse(time_stream, "%a, %d %h %Y %T %z", time_point);
+                    item.pub_date_ = time_point;
+                }
+
+                const auto source_node = item_node.get_child_optional("source");
+                if (source_node)
+                    item.source_ =
+                        source(source_node->get_value<std::string>(),
+                               source_node->get<std::string>("<xmlattr>.url"));
 
                 data.items_.emplace_back(std::move(item));
             }
