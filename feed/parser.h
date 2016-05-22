@@ -250,15 +250,26 @@ class item {
 
 class data {
   public:
-    data(data &&other) noexcept : title_(std::move(other.title_)),
-                                  link_(std::move(other.link_)),
-                                  description_(std::move(other.description_)),
-                                  image_(std::move(other.image_)),
-                                  items_(std::move(other.items_)) {}
+    data(data &&other) noexcept
+        : title_(std::move(other.title_)),
+          link_(std::move(other.link_)),
+          description_(std::move(other.description_)),
+          copyright_(std::move(other.copyright_)),
+          managing_editor_(std::move(other.managing_editor_)),
+          web_master_(std::move(other.web_master_)),
+          image_(std::move(other.image_)),
+          items_(std::move(other.items_)) {}
 
     const std::string &title() const { return title_; }
     const std::string &link() const { return link_; }
     const std::string &description() const { return description_; }
+    const boost::optional<std::string> &copyright() const { return copyright_; }
+    const boost::optional<std::string> &managing_editor() const {
+        return managing_editor_;
+    }
+    const boost::optional<std::string> &web_master() const {
+        return web_master_;
+    }
     const boost::optional<class image> &image() const { return image_; }
 
     const std::vector<item> &items() const { return items_; }

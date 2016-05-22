@@ -67,6 +67,18 @@ int main(int argc, char *argv[]) {
               << "  link: " << feed->link() << '\n'
               << "  description: " << feed->description() << '\n';
 
+    const auto &copyright = feed->copyright();
+    if (copyright)
+        std::cout << "  copyright: " << copyright.value() << '\n';
+
+    const auto &managing_editor = feed->managing_editor();
+    if (copyright)
+        std::cout << "  managing_editor: " << managing_editor.value() << '\n';
+
+    const auto &web_master = feed->web_master();
+    if (copyright)
+        std::cout << "  web_master: " << web_master.value() << '\n';
+
     const auto &image = feed->image();
     if (image) {
         std::cout << "  image:\n"
@@ -77,9 +89,11 @@ int main(int argc, char *argv[]) {
         const auto &width = image->width();
         if (width)
             std::cout << "    width: " << width.value() << '\n';
+
         const auto &height = image->height();
         if (height)
             std::cout << "    height: " << height.value() << '\n';
+
         const auto &description = image->description();
         if (description)
             std::cout << "    description: " << description.value() << '\n';
@@ -91,19 +105,37 @@ int main(int argc, char *argv[]) {
 
     for (const auto &item : feed->items()) {
         std::cout << "    item:\n";
+
         const auto &title = item.title();
         if (title)
             std::cout << "      title: " << title.value() << '\n';
+
         const auto &link = item.link();
         if (link)
             std::cout << "      link: " << link.value() << '\n';
+
         // const auto description = item.description();
         // if (description)
         // std::cout << "      description: " << description.value()
         //            << '\n';
+
         const auto &author = item.author();
         if (author)
             std::cout << "      author: " << author.value() << '\n';
+
+        const auto &categories = item.categories();
+        if (categories)
+            for (const auto &category : categories.value()) {
+                std::cout << "      category: " << category.value() << '\n';
+                const auto &domain = category.domain();
+                if (domain)
+                    std::cout << "        domain: " << domain.value() << '\n';
+            }
+
+        const auto &comments = item.comments();
+        if (comments)
+            std::cout << "      comments: " << comments.value() << '\n';
+
         const auto &enclosure = item.enclosure();
         if (enclosure) {
             std::cout << "      enclosure:\n"
@@ -117,16 +149,23 @@ int main(int argc, char *argv[]) {
 
             urls.emplace_back(enclosure->url());
         }
+
         const auto &guid = item.guid();
         if (guid)
             std::cout << "      guid: " << guid->value() << '\n'
                       << "        is_perma_link: " << std::boolalpha
                       << guid->is_perma_link() << '\n';
+
         const auto &pub_date = item.pub_date();
         if (pub_date)
             std::cout << "      pub_date: "
                       << date::format("%A %F %T %z %Z", pub_date.value())
                       << '\n';
+
+        const auto &source = item.source();
+        if (source)
+            std::cout << "      source: " << source->value() << '\n'
+                      << "        url: " << source->url() << '\n';
     }
 
     if (!urls.empty())

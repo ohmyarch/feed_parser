@@ -31,6 +31,17 @@
 #include <feed/date_time/tz.h>
 #include <feed/parser.h>
 
+static std::unordered_map<std::string, std::string> offset_map = {
+    {"GMT", "+0000"}, {"UTC", "+0000"}, {"UT", "+0000"},  {"EDT", "-0400"},
+    {"EST", "-0500"}, {"CDT", "-0500"}, {"CST", "-0600"}, {"MDT", "-0600"},
+    {"MST", "-0700"}, {"PDT", "-0700"}, {"PST", "-0800"}, {"A", "+0100"},
+    {"B", "+0200"},   {"C", "+0300"},   {"D", "+0400"},   {"E", "+0500"},
+    {"F", "+0600"},   {"G", "+0700"},   {"H", "+0800"},   {"I", "+0900"},
+    {"K", "+1000"},   {"L", "+1100"},   {"M", "+1200"},   {"N", "-0100"},
+    {"O", "-0200"},   {"P", "-0300"},   {"Q", "-0400"},   {"R", "-0500"},
+    {"S", "-0600"},   {"T", "-0700"},   {"U", "-0800"},   {"V", "-0900"},
+    {"W", "-1000"},   {"X", "-1100"},   {"Y", "-1200"},   {"Z", "+0000"}};
+
 namespace feed {
 boost::optional<data> parser::parse(const std::string &uri) {
     web::http::client::http_client client(
@@ -55,6 +66,10 @@ boost::optional<data> parser::parse(const std::string &uri) {
         data.title_ = channel_node.get<std::string>("title");
         data.link_ = channel_node.get<std::string>("link");
         data.description_ = channel_node.get<std::string>("description");
+        data.copyright_ = channel_node.get_optional<std::string>("copyright");
+        data.managing_editor_ =
+        channel_node.get_optional<std::string>("managingEditor");
+        data.web_master_ = channel_node.get_optional<std::string>("webMaster");
 
         const auto image_node = channel_node.get_child_optional("image");
         if (image_node) {
@@ -118,13 +133,18 @@ boost::optional<data> parser::parse(const std::string &uri) {
                     const auto pos = pub_date_value.find_last_of(' ');
                     const std::string utc_offset =
                         pub_date_value.substr(pos + 1);
-                    std::string time_str;
-                    if (utc_offset == "GMT" || utc_offset == "UTC" ||
-                        utc_offset == "UT")
-                        ;
-                    std::istringstream time_stream(time_str);
+                    std::string time_str = pub_date_value.substr(0, pos + 1);
                     date::second_point time_point;
-                    date::parse(time_stream, "%a, %d %h %Y %T %z", time_point);
+                    if (utc_offset.size() != 5) {
+                        std::istringstream time_stream(time_str +
+                                                       offset_map[utc_offset]);
+                        date::parse(time_stream, "%a, %d %h %Y %T %z",
+                                    time_point);
+                    } else {
+                        std::istringstream time_stream(pub_date_value);
+                        date::parse(time_stream, "%a, %d %h %Y %T %z",
+                                    time_point);
+                    }
                     item.pub_date_ = time_point;
                 }
 
