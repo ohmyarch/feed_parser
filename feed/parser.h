@@ -257,6 +257,11 @@ class data {
           copyright_(std::move(other.copyright_)),
           managing_editor_(std::move(other.managing_editor_)),
           web_master_(std::move(other.web_master_)),
+          pub_date_(other.pub_date_),
+          last_build_date_(other.last_build_date_),
+          categories_(std::move(other.categories_)),
+          generator_(std::move(other.generator_)),
+          docs_(std::move(other.docs_)),
           image_(std::move(other.image_)),
           items_(std::move(other.items_)) {}
 
@@ -270,6 +275,21 @@ class data {
     const boost::optional<std::string> &web_master() const {
         return web_master_;
     }
+    const boost::optional<std::chrono::time_point<std::chrono::system_clock,
+                                                  std::chrono::seconds>> &
+    pub_date() const {
+        return pub_date_;
+    }
+    const boost::optional<std::chrono::time_point<std::chrono::system_clock,
+                                                  std::chrono::seconds>> &
+    last_build_date() const {
+        return last_build_date_;
+    }
+    const boost::optional<std::vector<class category>> &categories() const {
+        return categories_;
+    }
+    const boost::optional<std::string> &generator() const { return generator_; }
+    const boost::optional<std::string> &docs() const { return docs_; }
     const boost::optional<class image> &image() const { return image_; }
 
     const std::vector<item> &items() const { return items_; }
@@ -291,6 +311,13 @@ class data {
     boost::optional<std::string> web_master_;      // Email address for person
                                                    // responsible for technical
     // issues relating to channel.
+    boost::optional<std::chrono::time_point<std::chrono::system_clock,
+                                            std::chrono::seconds>>
+        pub_date_;
+    boost::optional<std::chrono::time_point<std::chrono::system_clock,
+                                            std::chrono::seconds>>
+        last_build_date_;
+    boost::optional<std::vector<class category>> categories_;
     boost::optional<std::string> generator_; // A string indicating the program
                                              // used to generate the channel.
     boost::optional<std::string> docs_;      // A URL that points to the
@@ -299,7 +326,6 @@ class data {
     boost::optional<class image> image_; // Specifies a GIF, JPEG or PNG image
                                          // that can be displayed with the
                                          // channel.
-
     std::vector<item> items_;
 };
 

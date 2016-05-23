@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
         if (link)
             std::cout << "      link: " << link.value() << '\n';
 
-        // const auto description = item.description();
+        // const auto &description = item.description();
         // if (description)
         // std::cout << "      description: " << description.value()
         //            << '\n';

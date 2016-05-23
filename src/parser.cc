@@ -42,6 +42,23 @@ static std::unordered_map<std::string, std::string> offset_map = {
     {"S", "-0600"},   {"T", "-0700"},   {"U", "-0800"},   {"V", "-0900"},
     {"W", "-1000"},   {"X", "-1100"},   {"Y", "-1200"},   {"Z", "+0000"}};
 
+static date::second_point get_time(const std::string &str) {
+    // TODO: Error Handling
+    const auto pos = str.find_last_of(' ');
+    const std::string utc_offset = str.substr(pos + 1);
+    std::string time_str = str.substr(0, pos + 1);
+    date::second_point time_point;
+    if (utc_offset.size() != 5) {
+        std::istringstream time_stream(time_str + offset_map[utc_offset]);
+        date::parse(time_stream, "%a, %d %h %Y %T %z", time_point);
+    } else {
+        std::istringstream time_stream(str);
+        date::parse(time_stream, "%a, %d %h %Y %T %z", time_point);
+    }
+
+    return time_point;
+}
+
 namespace feed {
 boost::optional<data> parser::parse(const std::string &uri) {
     web::http::client::http_client client(
@@ -68,8 +85,20 @@ boost::optional<data> parser::parse(const std::string &uri) {
         data.description_ = channel_node.get<std::string>("description");
         data.copyright_ = channel_node.get_optional<std::string>("copyright");
         data.managing_editor_ =
-        channel_node.get_optional<std::string>("managingEditor");
+            channel_node.get_optional<std::string>("managingEditor");
         data.web_master_ = channel_node.get_optional<std::string>("webMaster");
+
+        const auto pub_date = channel_node.get_optional<std::string>("pubDate");
+        if (pub_date)
+            data.pub_date_ = get_time(pub_date.value());
+
+        const auto last_build_date =
+            channel_node.get_optional<std::string>("lastBuildDate");
+        if (last_build_date)
+            data.last_build_date_ = get_time(last_build_date.value());
+
+        data.generator_ = channel_node.get_optional<std::string>("generator");
+        data.docs_ = channel_node.get_optional<std::string>("docs");
 
         const auto image_node = channel_node.get_child_optional("image");
         if (image_node) {
@@ -125,28 +154,10 @@ boost::optional<data> parser::parse(const std::string &uri) {
                         guid_node->get_value<std::string>(),
                         guid_node->get_optional<bool>("<xmlattr>.isPermaLink"));
 
-                const auto &pub_date =
+                const auto pub_date =
                     item_node.get_optional<std::string>("pubDate");
-                if (pub_date) {
-                    const std::string &pub_date_value = pub_date.value();
-                    // TODO: Error Handling
-                    const auto pos = pub_date_value.find_last_of(' ');
-                    const std::string utc_offset =
-                        pub_date_value.substr(pos + 1);
-                    std::string time_str = pub_date_value.substr(0, pos + 1);
-                    date::second_point time_point;
-                    if (utc_offset.size() != 5) {
-                        std::istringstream time_stream(time_str +
-                                                       offset_map[utc_offset]);
-                        date::parse(time_stream, "%a, %d %h %Y %T %z",
-                                    time_point);
-                    } else {
-                        std::istringstream time_stream(pub_date_value);
-                        date::parse(time_stream, "%a, %d %h %Y %T %z",
-                                    time_point);
-                    }
-                    item.pub_date_ = time_point;
-                }
+                if (pub_date)
+                    item.pub_date_ = get_time(pub_date.value());
 
                 const auto source_node = item_node.get_child_optional("source");
                 if (source_node)
@@ -155,6 +166,8 @@ boost::optional<data> parser::parse(const std::string &uri) {
                                source_node->get<std::string>("<xmlattr>.url"));
 
                 data.items_.emplace_back(std::move(item));
+            } else if (channel_child.first == "category") {
+                ;
             }
 
         return std::move(data);
