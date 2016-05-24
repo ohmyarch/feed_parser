@@ -79,6 +79,35 @@ int main(int argc, char *argv[]) {
     if (copyright)
         std::cout << "  web_master: " << web_master.value() << '\n';
 
+    const auto &channel_pub_date = feed->pub_date();
+    if (channel_pub_date)
+        std::cout << "  pub_date: "
+                  << date::format("%A %F %T %z %Z", channel_pub_date.value())
+                  << '\n';
+
+    const auto &last_build_date = feed->last_build_date();
+    if (last_build_date)
+        std::cout << "  last_build_date: "
+                  << date::format("%A %F %T %z %Z", last_build_date.value())
+                  << '\n';
+
+    const auto &data_categories = feed->categories();
+    if (data_categories)
+        for (const auto &category : data_categories.value()) {
+            std::cout << "  category: " << category.value() << '\n';
+            const auto &domain = category.domain();
+            if (domain)
+                std::cout << "    domain: " << domain.value() << '\n';
+        }
+
+    const auto &generator = feed->generator();
+    if (generator)
+        std::cout << "  generator: " << generator.value() << '\n';
+
+    const auto &docs = feed->docs();
+    if (docs)
+        std::cout << "  docs: " << docs.value() << '\n';
+
     const auto &image = feed->image();
     if (image) {
         std::cout << "  image:\n"
@@ -123,9 +152,9 @@ int main(int argc, char *argv[]) {
         if (author)
             std::cout << "      author: " << author.value() << '\n';
 
-        const auto &categories = item.categories();
-        if (categories)
-            for (const auto &category : categories.value()) {
+        const auto &item_categories = item.categories();
+        if (item_categories)
+            for (const auto &category : item_categories.value()) {
                 std::cout << "      category: " << category.value() << '\n';
                 const auto &domain = category.domain();
                 if (domain)
@@ -156,10 +185,10 @@ int main(int argc, char *argv[]) {
                       << "        is_perma_link: " << std::boolalpha
                       << guid->is_perma_link() << '\n';
 
-        const auto &pub_date = item.pub_date();
-        if (pub_date)
+        const auto &item_pub_date = item.pub_date();
+        if (item_pub_date)
             std::cout << "      pub_date: "
-                      << date::format("%A %F %T %z %Z", pub_date.value())
+                      << date::format("%A %F %T %z %Z", item_pub_date.value())
                       << '\n';
 
         const auto &source = item.source();
