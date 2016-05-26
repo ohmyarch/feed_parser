@@ -100,9 +100,24 @@ boost::optional<data> parser::parse(const std::string &uri) {
         data.generator_ = channel_node.get_optional<std::string>("generator");
         data.docs_ = channel_node.get_optional<std::string>("docs");
 
-        const auto cloud_node = channel_node.get_child_optional("cloud");
-        if (cloud_node)
-            ;
+        const auto cloud_node =
+            channel_node.get_child_optional("cloud.<xmlattr>");
+        if (cloud_node) {
+            cloud cloud;
+            cloud.domain_ = cloud_node->get<std::string>("domain");
+            cloud.path_ = cloud_node->get<std::string>("path");
+            cloud.port_ = cloud_node->get<std::uint16_t>("port");
+            cloud.protocol_ =
+                (cloud_node->get<std::string>("protocol") == "xml-rpc")
+                    ? protocol::xml_rpc
+                    : protocol::soap;
+            cloud.register_procedure_ =
+                cloud_node->get<std::string>("register_procedure");
+
+            data.cloud_ = std::move(cloud);
+        }
+
+        data.ttl_ = channel_node.get_optional<std::uint16_t>("ttl");
 
         const auto image_node = channel_node.get_child_optional("image");
         if (image_node) {

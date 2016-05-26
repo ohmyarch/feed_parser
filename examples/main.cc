@@ -107,6 +107,23 @@ int main(int argc, char *argv[]) {
     if (docs)
         std::cout << "  docs: " << docs.value() << '\n';
 
+    const auto &cloud = feed->cloud();
+    if (cloud)
+        std::cout << "  cloud:\n"
+                  << "    domain: " << cloud->domain() << '\n'
+                  << "    path: " << cloud->path() << '\n'
+                  << "    port: " << cloud->port() << '\n'
+                  << "    protocol: "
+                  << ((cloud->protocol() == feed::protocol::xml_rpc) ? "xml-rpc"
+                                                                     : "soap")
+                  << '\n'
+                  << "    register_procedure: " << cloud->register_procedure()
+                  << '\n';
+
+    const auto &ttl = feed->ttl();
+    if (ttl)
+        std::cout << "  ttl: " << ttl.value() << '\n';
+
     const auto &image = feed->image();
     if (image) {
         std::cout << "  image:\n"

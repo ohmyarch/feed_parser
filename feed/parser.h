@@ -70,7 +70,23 @@ class cloud {
         return register_procedure_;
     }
 
+    cloud &operator=(cloud &&other) noexcept {
+        if (&other != this) {
+            domain_ = std::move(other.domain_);
+            path_ = std::move(other.path_);
+            port_ = other.port_;
+            protocol_ = other.protocol_;
+            register_procedure_ = std::move(other.register_procedure_);
+        }
+
+        return *this;
+    }
+
   private:
+    friend class parser;
+
+    cloud() {}
+
     std::string domain_; // Domain of the cloud server.
     std::string path_;   // Location of the cloud server's responder.
     std::uint16_t port_; // Port the cloud server is running on.
@@ -292,6 +308,8 @@ class data {
           categories_(std::move(other.categories_)),
           generator_(std::move(other.generator_)),
           docs_(std::move(other.docs_)),
+          cloud_(std::move(other.cloud_)),
+          ttl_(std::move(other.ttl_)),
           image_(std::move(other.image_)),
           items_(std::move(other.items_)) {}
 
@@ -321,6 +339,7 @@ class data {
     const boost::optional<std::string> &generator() const { return generator_; }
     const boost::optional<std::string> &docs() const { return docs_; }
     const boost::optional<class cloud> &cloud() const { return cloud_; }
+    const boost::optional<std::uint16_t> &ttl() const { return ttl_; }
     const boost::optional<class image> &image() const { return image_; }
 
     const std::vector<item> &items() const { return items_; }
@@ -354,10 +373,14 @@ class data {
     boost::optional<std::string> docs_;      // A URL that points to the
     // documentation for the format used in
     // the RSS file.
-    boost::optional<class cloud> cloud_; // Indicates that updates to the feed can be
-                                   // monitored using a web service that
-                                   // implements the RssCloud application
-                                   // programming interface.
+    boost::optional<class cloud>
+        cloud_; // Indicates that updates to the feed can be
+    // monitored using a web service that
+    // implements the RssCloud application
+    // programming interface.
+    boost::optional<std::uint16_t> ttl_; // a number of minutes that indicates
+                                         // how long a channel can be cached
+                                         // before refreshing from the source
     boost::optional<class image> image_; // Specifies a GIF, JPEG or PNG image
                                          // that can be displayed with the
                                          // channel.
