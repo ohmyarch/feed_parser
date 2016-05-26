@@ -33,6 +33,54 @@
 #include <string>
 
 namespace feed {
+class category {
+  public:
+    category(std::string &&value,
+             boost::optional<std::string> &&domain) noexcept
+        : value_(std::move(value)),
+          domain_(std::move(domain)) {}
+    category(category &&other) noexcept : value_(std::move(other.value_)),
+                                          domain_(std::move(other.value_)) {}
+
+    const std::string &value() const { return value_; }
+    const boost::optional<std::string> &domain() const { return domain_; }
+
+  private:
+    std::string value_;
+    boost::optional<std::string>
+        domain_; // A string that identifies a categorization taxonomy.
+};
+
+enum class protocol : std::uint8_t { xml_rpc, soap };
+
+class cloud {
+  public:
+    cloud(cloud &&other) noexcept
+        : domain_(std::move(other.domain_)),
+          path_(std::move(other.path_)),
+          port_(other.port_),
+          protocol_(other.protocol_),
+          register_procedure_(std::move(other.register_procedure_)) {}
+
+    const std::string &domain() const { return domain_; }
+    const std::string &path() const { return path_; }
+    std::uint16_t port() const { return port_; }
+    enum protocol protocol() const { return protocol_; }
+    const std::string &register_procedure() const {
+        return register_procedure_;
+    }
+
+  private:
+    std::string domain_; // Domain of the cloud server.
+    std::string path_;   // Location of the cloud server's responder.
+    std::uint16_t port_; // Port the cloud server is running on.
+    enum protocol
+        protocol_; // Protocol to use for communications with the cloud
+                   // server (xml-rpc or soap).
+    std::string register_procedure_; // Name of procedure to call to request
+                                     // notification.
+};
+
 class image {
   public:
     image(image &&other) noexcept
@@ -76,24 +124,6 @@ class image {
     boost::optional<std::uint16_t> width_;
     boost::optional<std::uint16_t> height_;
     boost::optional<std::string> description_;
-};
-
-class category {
-  public:
-    category(std::string &&value,
-             boost::optional<std::string> &&domain) noexcept
-        : value_(std::move(value)),
-          domain_(std::move(domain)) {}
-    category(category &&other) noexcept : value_(std::move(other.value_)),
-                                          domain_(std::move(other.value_)) {}
-
-    const std::string &value() const { return value_; }
-    const boost::optional<std::string> &domain() const { return domain_; }
-
-  private:
-    std::string value_;
-    boost::optional<std::string>
-        domain_; // A string that identifies a categorization taxonomy.
 };
 
 class enclosure {
@@ -290,6 +320,7 @@ class data {
     }
     const boost::optional<std::string> &generator() const { return generator_; }
     const boost::optional<std::string> &docs() const { return docs_; }
+    const boost::optional<class cloud> &cloud() const { return cloud_; }
     const boost::optional<class image> &image() const { return image_; }
 
     const std::vector<item> &items() const { return items_; }
@@ -323,6 +354,10 @@ class data {
     boost::optional<std::string> docs_;      // A URL that points to the
     // documentation for the format used in
     // the RSS file.
+    boost::optional<class cloud> cloud_; // Indicates that updates to the feed can be
+                                   // monitored using a web service that
+                                   // implements the RssCloud application
+                                   // programming interface.
     boost::optional<class image> image_; // Specifies a GIF, JPEG or PNG image
                                          // that can be displayed with the
                                          // channel.

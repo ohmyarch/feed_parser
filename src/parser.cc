@@ -88,10 +88,9 @@ boost::optional<data> parser::parse(const std::string &uri) {
             channel_node.get_optional<std::string>("managingEditor");
         data.web_master_ = channel_node.get_optional<std::string>("webMaster");
 
-        const auto channel_pub_date =
-            channel_node.get_optional<std::string>("pubDate");
-        if (channel_pub_date)
-            data.pub_date_ = get_time(channel_pub_date.value());
+        const auto pub_date = channel_node.get_optional<std::string>("pubDate");
+        if (pub_date)
+            data.pub_date_ = get_time(pub_date.value());
 
         const auto last_build_date =
             channel_node.get_optional<std::string>("lastBuildDate");
@@ -100,6 +99,10 @@ boost::optional<data> parser::parse(const std::string &uri) {
 
         data.generator_ = channel_node.get_optional<std::string>("generator");
         data.docs_ = channel_node.get_optional<std::string>("docs");
+
+        const auto cloud_node = channel_node.get_child_optional("cloud");
+        if (cloud_node)
+            ;
 
         const auto image_node = channel_node.get_child_optional("image");
         if (image_node) {
@@ -115,7 +118,7 @@ boost::optional<data> parser::parse(const std::string &uri) {
             data.image_ = std::move(image);
         }
 
-        std::vector<category> channel_categories;
+        std::vector<category> categories;
 
         for (const auto &channel_child : channel_node)
             if (channel_child.first == "item") {
@@ -127,19 +130,19 @@ boost::optional<data> parser::parse(const std::string &uri) {
                     item_node.get_optional<std::string>("description");
                 item.author_ = item_node.get_optional<std::string>("author");
 
-                std::vector<category> item_categories_;
+                std::vector<category> categories;
 
                 for (const auto &item_child : item_node)
                     if (item_child.first == "category") {
-                        const auto &item_category_node = item_child.second;
-                        item_categories_.emplace_back(
-                            item_category_node.get_value<std::string>(),
-                            item_category_node.get_optional<std::string>(
+                        const auto &category_node = item_child.second;
+                        categories.emplace_back(
+                            category_node.get_value<std::string>(),
+                            category_node.get_optional<std::string>(
                                 "<xmlattr>.domain"));
                     }
 
-                if (!item_categories_.empty())
-                    item.categories_ = std::move(item_categories_);
+                if (!categories.empty())
+                    item.categories_ = std::move(categories);
 
                 item.comments_ =
                     item_node.get_optional<std::string>("comments");
@@ -157,10 +160,10 @@ boost::optional<data> parser::parse(const std::string &uri) {
                         guid_node->get_value<std::string>(),
                         guid_node->get_optional<bool>("<xmlattr>.isPermaLink"));
 
-                const auto item_pub_date =
+                const auto pub_date =
                     item_node.get_optional<std::string>("pubDate");
-                if (item_pub_date)
-                    item.pub_date_ = get_time(item_pub_date.value());
+                if (pub_date)
+                    item.pub_date_ = get_time(pub_date.value());
 
                 const auto source_node = item_node.get_child_optional("source");
                 if (source_node)
@@ -170,15 +173,14 @@ boost::optional<data> parser::parse(const std::string &uri) {
 
                 data.items_.emplace_back(std::move(item));
             } else if (channel_child.first == "category") {
-                const auto &channel_category_node = channel_child.second;
-                channel_categories.emplace_back(
-                    channel_category_node.get_value<std::string>(),
-                    channel_category_node.get_optional<std::string>(
-                        "<xmlattr>.domain"));
+                const auto &category_node = channel_child.second;
+                categories.emplace_back(category_node.get_value<std::string>(),
+                                        category_node.get_optional<std::string>(
+                                            "<xmlattr>.domain"));
             }
 
-        if (!channel_categories.empty())
-            data.categories_ = std::move(channel_categories);
+        if (!categories.empty())
+            data.categories_ = std::move(categories);
 
         return std::move(data);
     } catch (const web::http::http_exception &e) {
