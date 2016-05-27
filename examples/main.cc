@@ -144,6 +144,14 @@ int main(int argc, char *argv[]) {
             std::cout << "    description: " << description.value() << '\n';
     }
 
+    const auto &text_input = feed->text_input();
+    if (text_input)
+        std::cout << "  text_input:\n"
+                  << "    title: " << text_input->title() << '\n'
+                  << "    description: " << text_input->description() << '\n'
+                  << "    name: " << text_input->name() << '\n'
+                  << "    link: " << text_input->link() << '\n';
+
     std::cout << "  items:\n";
 
     std::vector<std::string> urls;

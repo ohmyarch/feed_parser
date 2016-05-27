@@ -133,6 +133,19 @@ boost::optional<data> parser::parse(const std::string &uri) {
             data.image_ = std::move(image);
         }
 
+        const auto text_input_node =
+            channel_node.get_child_optional("textInput");
+        if (text_input_node) {
+            text_input input;
+            input.title_ = text_input_node->get<std::string>("title");
+            input.description_ =
+                text_input_node->get<std::string>("description");
+            input.name_ = text_input_node->get<std::string>("name");
+            input.link_ = text_input_node->get<std::string>("link");
+
+            data.text_input_ = std::move(input);
+        }
+
         std::vector<category> categories;
 
         for (const auto &channel_child : channel_node)

@@ -142,6 +142,43 @@ class image {
     boost::optional<std::string> description_;
 };
 
+class text_input {
+  public:
+    text_input(text_input &&other) noexcept
+        : title_(std::move(other.title_)),
+          description_(std::move(other.description_)),
+          name_(std::move(other.name_)),
+          link_(std::move(other.link_)) {}
+
+    const std::string &title() const { return title_; }
+    const std::string &description() const { return description_; }
+    const std::string &name() const { return name_; }
+    const std::string &link() const { return link_; }
+
+    text_input &operator=(text_input &&other) noexcept {
+        if (&other != this) {
+            title_ = std::move(other.title_);
+            description_ = std::move(other.description_);
+            name_ = std::move(other.name_);
+            link_ = std::move(other.link_);
+        }
+
+        return *this;
+    }
+
+  private:
+    friend class parser;
+
+    text_input() {}
+
+    std::string
+        title_; // The label of the Submit button in the text input area.
+    std::string description_; // Explains the text input area.
+    std::string name_; // The name of the text object in the text input area.
+    std::string
+        link_; // The URL of the CGI script that processes text input requests.
+};
+
 class enclosure {
   public:
     enclosure(enclosure &&other) noexcept : url_(std::move(other.url_)),
@@ -311,6 +348,7 @@ class data {
           cloud_(std::move(other.cloud_)),
           ttl_(std::move(other.ttl_)),
           image_(std::move(other.image_)),
+          text_input_(std::move(other.text_input_)),
           items_(std::move(other.items_)) {}
 
     const std::string &title() const { return title_; }
@@ -341,7 +379,9 @@ class data {
     const boost::optional<class cloud> &cloud() const { return cloud_; }
     const boost::optional<std::uint16_t> &ttl() const { return ttl_; }
     const boost::optional<class image> &image() const { return image_; }
-
+    const boost::optional<class text_input> &text_input() const {
+        return text_input_;
+    }
     const std::vector<item> &items() const { return items_; }
 
   private:
@@ -382,8 +422,11 @@ class data {
                                          // how long a channel can be cached
                                          // before refreshing from the source
     boost::optional<class image> image_; // Specifies a GIF, JPEG or PNG image
-                                         // that can be displayed with the
-                                         // channel.
+    // that can be displayed with the
+    // channel.
+    boost::optional<class text_input> text_input_; // Specifies a text input box
+                                                   // that can be displayed with
+                                                   // the channel.
     std::vector<item> items_;
 };
 
