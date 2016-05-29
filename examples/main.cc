@@ -36,7 +36,7 @@
 ****************************************************************************/
 
 #include <feed/date_time/tz.h>
-#include <feed/parser.h>
+#include <feed/rss_parser.h>
 
 inline void open_url(const std::string &uri) {
 #if defined(_WIN32) && !defined(__cplusplus_winrt)
@@ -54,7 +54,7 @@ inline void open_url(const std::string &uri) {
 }
 
 int main(int argc, char *argv[]) {
-    feed::parser parser;
+    feed::rss_parser parser;
     const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
     if (!feed) {
         std::cerr << "Failed.\n";
@@ -151,6 +151,106 @@ int main(int argc, char *argv[]) {
                   << "    description: " << text_input->description() << '\n'
                   << "    name: " << text_input->name() << '\n'
                   << "    link: " << text_input->link() << '\n';
+
+    const auto &skip_hours = feed->skip_hours();
+    if (skip_hours) {
+        std::cout << "  skip_hours: ";
+
+        for (const auto hour : skip_hours.value())
+            std::cout << hour << " | ";
+
+        std::cout << "\b\b \n";
+    }
+
+    std::vector<feed::day> vec{feed::day::sunday, feed::day::wednesday,
+                               feed::day::monday};
+
+    const auto &skip_days = feed->skip_days();
+    if (skip_days) {
+        std::cout << "  skip_days: ";
+
+        for (const auto day : skip_days.value())
+            switch (day) {
+            case feed::day::monday:
+                std::cout << "Monday | ";
+                break;
+            case feed::day::tuesday:
+                std::cout << "Tuesday | ";
+                break;
+            case feed::day::wednesday:
+                std::cout << "Wednesday | ";
+                break;
+            case feed::day::thursday:
+                std::cout << "Thursday | ";
+                break;
+            case feed::day::friday:
+                std::cout << "Friday | ";
+                break;
+            case feed::day::saturday:
+                std::cout << "Saturday | ";
+                break;
+            case feed::day::sunday:
+                std::cout << "Sunday | ";
+                break;
+            }
+
+        std::cout << "\b\b \n";
+    }
+
+    const auto &atom_link = feed->atom_link();
+    if (atom_link) {
+        std::cout << "  atom:\n"
+                  << "    link:\n"
+                  << "      href: " << atom_link->href() << '\n';
+
+        const auto &href_lang = atom_link->href_lang();
+        if (href_lang)
+            std::cout << "      href_lang: " << href_lang.value() << '\n';
+
+        const auto &length = atom_link->length();
+        if (length)
+            std::cout << "      length: " << length.value() << '\n';
+
+        const auto &title = atom_link->title();
+        if (title)
+            std::cout << "      title: " << title.value() << '\n';
+
+        const auto &type = atom_link->type();
+        if (type)
+            std::cout << "      type: " << type.value() << '\n';
+
+        const auto &rel = atom_link->rel();
+        if (rel) {
+            std::cout << "      rel: ";
+
+            switch (rel.value()) {
+            case feed::rel::alternate:
+                std::cout << "alternate\n";
+                break;
+            case feed::rel::enclosure:
+                std::cout << "enclosure\n";
+                break;
+            case feed::rel::related:
+                std::cout << "related\n";
+                break;
+            case feed::rel::self:
+                std::cout << "self\n";
+                break;
+            case feed::rel::via:
+                std::cout << "via\n";
+                break;
+            }
+        }
+    }
+
+    const auto &itunes = feed->itunes();
+    if (itunes) {
+        std::cout << "  itunes:\n";
+
+        const auto &new_feed_url = itunes->new_feed_url();
+        if (new_feed_url)
+            std::cout << "    new_feed_url: " << new_feed_url.value() << '\n';
+    }
 
     std::cout << "  items:\n";
 

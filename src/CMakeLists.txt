@@ -2,7 +2,7 @@ if(UNIX)
   add_definitions(-DHAS_REMOTE_API=0)
 endif()
 
-add_library(${FEED_PARSER_LIBRARY} ../feed/date_time/tz.cpp parser.cc)
+add_library(${FEED_PARSER_LIBRARY} ../feed/date_time/tz.cpp atom_parser.cc rss_parser.cc)
 
 target_link_libraries(${FEED_PARSER_LIBRARY}
   ${OPENSSL_LIBRARIES}

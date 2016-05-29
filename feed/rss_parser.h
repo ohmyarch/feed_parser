@@ -70,20 +70,8 @@ class cloud {
         return register_procedure_;
     }
 
-    cloud &operator=(cloud &&other) noexcept {
-        if (&other != this) {
-            domain_ = std::move(other.domain_);
-            path_ = std::move(other.path_);
-            port_ = other.port_;
-            protocol_ = other.protocol_;
-            register_procedure_ = std::move(other.register_procedure_);
-        }
-
-        return *this;
-    }
-
   private:
-    friend class parser;
+    friend class rss_parser;
 
     cloud() {}
 
@@ -103,8 +91,8 @@ class image {
         : url_(std::move(other.url_)),
           title_(std::move(other.title_)),
           link_(std::move(other.link_)),
-          width_(std::move(other.width_)),
-          height_(std::move(other.height_)),
+          width_(other.width_),
+          height_(other.height_),
           description_(std::move(other.description_)) {}
 
     const std::string &url() const { return url_; }
@@ -116,21 +104,8 @@ class image {
         return description_;
     }
 
-    image &operator=(image &&other) noexcept {
-        if (&other != this) {
-            url_ = std::move(other.url_);
-            title_ = std::move(other.title_);
-            link_ = std::move(other.link_);
-            width_ = std::move(other.width_);
-            height_ = std::move(other.height_);
-            description_ = std::move(other.description_);
-        }
-
-        return *this;
-    }
-
   private:
-    friend class parser;
+    friend class rss_parser;
 
     image() {}
 
@@ -155,19 +130,8 @@ class text_input {
     const std::string &name() const { return name_; }
     const std::string &link() const { return link_; }
 
-    text_input &operator=(text_input &&other) noexcept {
-        if (&other != this) {
-            title_ = std::move(other.title_);
-            description_ = std::move(other.description_);
-            name_ = std::move(other.name_);
-            link_ = std::move(other.link_);
-        }
-
-        return *this;
-    }
-
   private:
-    friend class parser;
+    friend class rss_parser;
 
     text_input() {}
 
@@ -179,32 +143,100 @@ class text_input {
         link_; // The URL of the CGI script that processes text input requests.
 };
 
+// A weekday in Greenwich Mean Time (GMT).
+enum class day : std::uint8_t {
+    monday,
+    tuesday,
+    wednesday,
+    thursday,
+    friday,
+    saturday,
+    sunday
+};
+
+enum class rel : std::uint8_t {
+    alternate, // An alternate representation, such as a web page containing the
+               // same content as a feed entry.
+    enclosure, // A media object such as an audio or video file.
+    related,   // A related resource.
+    self,      // The feed itself.
+    via // The original source that authored the entry, when it's not the feed
+        // publisher.
+};
+
+class atom_link {
+  public:
+    atom_link(atom_link &&other) noexcept
+        : href_(std::move(other.href_)),
+          href_lang_(std::move(other.href_lang_)),
+          length_(other.length_),
+          title_(std::move(other.title_)),
+          type_(std::move(other.type_)),
+          rel_(other.rel_) {}
+
+    const std::string &href() const { return href_; }
+    const boost::optional<std::string> &href_lang() const { return href_lang_; }
+    const boost::optional<std::uint64_t> &length() const { return length_; }
+    const boost::optional<std::string> &title() const { return title_; }
+    const boost::optional<std::string> &type() const { return type_; }
+    const boost::optional<enum rel> &rel() const { return rel_; }
+
+  private:
+    friend class rss_parser;
+
+    atom_link() {}
+
+    std::string href_;                       // The URL of the related resource.
+    boost::optional<std::string> href_lang_; // The language used by the related
+                                             // resource using an HTML language
+                                             // code.
+    boost::optional<std::uint64_t> length_;  // The resource's size, in bytes.
+    boost::optional<std::string>
+        title_; // A human-readable description of the resource.
+    boost::optional<std::string> type_; // The resource's MIME media type.
+    boost::optional<enum rel>
+        rel_; // Contains a keyword that identifies the nature
+              // of the relationship between the linked resouce
+              // and the element.
+};
+
+class rss_parser;
+
+namespace channel {
+class itunes {
+  public:
+    itunes(itunes &&other) noexcept
+        : new_feed_url_(std::move(other.new_feed_url_)) {}
+
+    const boost::optional<std::string> &new_feed_url() const {
+        return new_feed_url_;
+    }
+
+  private:
+    friend class feed::rss_parser;
+
+    itunes() {}
+
+    boost::optional<std::string> new_feed_url_;
+};
+}
+
 class enclosure {
   public:
+    enclosure(std::string &&url, boost::optional<std::uint64_t> &&length,
+              std::string &&type) noexcept : url_(std::move(url)),
+                                             length_(length),
+                                             type_(std::move(type)) {}
     enclosure(enclosure &&other) noexcept : url_(std::move(other.url_)),
-                                            length_(std::move(other.length_)),
+                                            length_(other.length_),
                                             type_(std::move(other.type_)) {}
 
     const std::string &url() const { return url_; }
     const boost::optional<std::uint64_t> &length() const { return length_; }
     const std::string &type() const { return type_; }
 
-    enclosure &operator=(enclosure &&other) noexcept {
-        if (&other != this) {
-            url_ = std::move(other.url_);
-            type_ = std::move(other.type_);
-        }
-
-        return *this;
-    }
-
   private:
-    friend class parser;
-
-    enclosure(std::string &&url, boost::optional<std::uint64_t> &&length,
-              std::string &&type) noexcept : url_(std::move(url)),
-                                             length_(std::move(length)),
-                                             type_(std::move(type)) {}
+    friend class rss_parser;
 
     std::string url_;                       // Where the enclosure is located.
     boost::optional<std::uint64_t> length_; // How big it is in bytes
@@ -213,28 +245,18 @@ class enclosure {
 
 class guid {
   public:
+    guid(std::string &&value,
+         const boost::optional<bool> &is_perma_link) noexcept
+        : value_(std::move(value)),
+          is_perma_link_(is_perma_link ? is_perma_link.value() : true) {}
     guid(guid &&other) noexcept : value_(std::move(other.value_)),
                                   is_perma_link_(other.is_perma_link_) {}
 
     const std::string &value() const { return value_; }
     bool is_perma_link() const { return is_perma_link_; }
 
-    guid &operator=(guid &&other) noexcept {
-        if (&other != this) {
-            value_ = std::move(other.value_);
-            is_perma_link_ = other.is_perma_link_;
-        }
-
-        return *this;
-    }
-
   private:
-    friend class parser;
-
-    guid(std::string &&value,
-         const boost::optional<bool> &is_perma_link) noexcept
-        : value_(std::move(value)),
-          is_perma_link_(is_perma_link ? is_perma_link.value() : true) {}
+    friend class rss_parser;
 
     std::string value_;
     bool is_perma_link_; // If its value is false, the guid may not be assumed
@@ -243,27 +265,17 @@ class guid {
 
 class source {
   public:
+    source(std::string &&value, std::string &&url) noexcept
+        : value_(std::move(value)),
+          url_(std::move(url)) {}
     source(source &&other) noexcept : value_(std::move(other.value_)),
                                       url_(std::move(other.url_)) {}
 
     const std::string &value() const { return value_; }
     const std::string &url() const { return url_; }
 
-    source &operator=(source &&other) noexcept {
-        if (&other != this) {
-            value_ = std::move(other.value_);
-            url_ = std::move(other.url_);
-        }
-
-        return *this;
-    }
-
   private:
-    friend class parser;
-
-    source(std::string &&value, std::string &&url) noexcept
-        : value_(std::move(value)),
-          url_(std::move(url)) {}
+    friend class rss_parser;
 
     std::string value_;
     std::string url_;
@@ -306,7 +318,7 @@ class item {
     const boost::optional<class source> &source() const { return source_; }
 
   private:
-    friend class parser;
+    friend class rss_parser;
 
     item() {}
 
@@ -331,12 +343,13 @@ class item {
         source_; // The RSS channel that the item came from.
 };
 
-class data {
+class rss_data {
   public:
-    data(data &&other) noexcept
+    rss_data(rss_data &&other) noexcept
         : title_(std::move(other.title_)),
           link_(std::move(other.link_)),
           description_(std::move(other.description_)),
+          language_(std::move(other.language_)),
           copyright_(std::move(other.copyright_)),
           managing_editor_(std::move(other.managing_editor_)),
           web_master_(std::move(other.web_master_)),
@@ -346,14 +359,19 @@ class data {
           generator_(std::move(other.generator_)),
           docs_(std::move(other.docs_)),
           cloud_(std::move(other.cloud_)),
-          ttl_(std::move(other.ttl_)),
+          ttl_(other.ttl_),
           image_(std::move(other.image_)),
           text_input_(std::move(other.text_input_)),
-          items_(std::move(other.items_)) {}
+          skip_hours_(std::move(other.skip_hours_)),
+          skip_days_(std::move(other.skip_days_)),
+          items_(std::move(other.items_)),
+          atom_link_(std::move(other.atom_link_)),
+          itunes_(std::move(other.itunes_)) {}
 
     const std::string &title() const { return title_; }
     const std::string &link() const { return link_; }
     const std::string &description() const { return description_; }
+    const boost::optional<std::string> &language() const { return language_; }
     const boost::optional<std::string> &copyright() const { return copyright_; }
     const boost::optional<std::string> &managing_editor() const {
         return managing_editor_;
@@ -382,17 +400,31 @@ class data {
     const boost::optional<class text_input> &text_input() const {
         return text_input_;
     }
+    const boost::optional<std::vector<std::uint16_t>> &skip_hours() const {
+        return skip_hours_;
+    }
+    const boost::optional<std::vector<day>> &skip_days() const {
+        return skip_days_;
+    }
     const std::vector<item> &items() const { return items_; }
+    const boost::optional<class atom_link> &atom_link() const {
+        return atom_link_;
+    }
+    const boost::optional<class channel::itunes> &itunes() const {
+        return itunes_;
+    }
 
   private:
-    friend class parser;
+    friend class rss_parser;
 
-    data() {}
+    rss_data() {}
 
     std::string title_; // The name of the channel.
     std::string
         link_; // The URL to the HTML website corresponding to the channel.
     std::string description_; // Phrase or sentence describing the channel.
+    boost::optional<std::string>
+        language_; // The language the channel is written in.
     boost::optional<std::string>
         copyright_; // Copyright notice for content in the channel.
     boost::optional<std::string> managing_editor_; // Email address for person
@@ -425,14 +457,26 @@ class data {
     // that can be displayed with the
     // channel.
     boost::optional<class text_input> text_input_; // Specifies a text input box
-                                                   // that can be displayed with
-                                                   // the channel.
+    // that can be displayed with
+    // the channel.
+    boost::optional<std::vector<std::uint16_t>> skip_hours_; // A hint for
+                                                             // aggregators
+                                                             // telling them
+                                                             // which days they
+                                                             // can skip.
+    boost::optional<std::vector<day>> skip_days_; // A hint for aggregators
+                                                  // telling them which days
+                                                  // they can skip.
     std::vector<item> items_;
+    boost::optional<class atom_link> atom_link_; // A relationship between a web
+    // resource (such as a page) and an
+    // RSS channel or item.
+    boost::optional<class channel::itunes> itunes_;
 };
 
-class parser { // rss 2.0
+class rss_parser { // rss 2.0
   public:
-    boost::optional<data> parse(const std::string &uri);
+    boost::optional<rss_data> parse(const std::string &uri);
 
     bool set_proxy(const std::string &uri);
 
@@ -440,3 +484,4 @@ class parser { // rss 2.0
     web::http::client::http_client_config http_client_config_;
 };
 }
+
