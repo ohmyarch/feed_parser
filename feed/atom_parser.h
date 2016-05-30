@@ -25,3 +25,18 @@
 ** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ****************************************************************************/
+
+#include <boost/optional.hpp>
+#include <cpprest/http_client.h>
+
+namespace feed {
+class atom_data {};
+
+class atom_parser {
+  public:
+    boost::optional<atom_data> parse(const std::string &uri);
+
+  private:
+    web::http::client::http_client_config http_client_config_;
+};
+}

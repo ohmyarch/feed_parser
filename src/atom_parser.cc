@@ -25,3 +25,33 @@
 ** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ****************************************************************************/
+
+#include <boost/property_tree/xml_parser.hpp>
+#include <feed/atom_parser.h>
+
+class atom_exception : public std::exception {
+  public:
+    const char *what() const noexcept override { return ""; }
+};
+
+namespace feed {
+boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
+    web::http::client::http_client client(
+        utility::conversions::to_string_t(uri), http_client_config_);
+    const auto response = client.request(web::http::methods::GET);
+
+    boost::property_tree::ptree root;
+
+    atom_data data;
+
+    try {
+        // FIXME
+        utility::istringstream_t stream(
+            response.get().extract_string(true).get());
+
+        boost::property_tree::read_xml(stream, root);
+
+    } catch (...) {
+    }
+}
+}

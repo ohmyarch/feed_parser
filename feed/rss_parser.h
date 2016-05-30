@@ -30,7 +30,6 @@
 
 #include <boost/optional.hpp>
 #include <cpprest/http_client.h>
-#include <string>
 
 namespace feed {
 class category {
