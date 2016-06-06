@@ -61,8 +61,21 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::cout << "id: " << feed->id() << '\n'
-              << "title: " << feed->title() << '\n';
+    std::cout << "id: " << feed->id() << '\n';
+
+    const auto &title = feed->title();
+    std::cout << "title: " << title.value() << '\n' << "  type: ";
+    switch (title.type()) {
+    case feed::text::type::text:
+        std::cout << "text\n";
+        break;
+    case feed::text::type::html:
+        std::cout << "html\n";
+        break;
+    case feed::text::type::xhtml:
+        std::cout << "xhtml\n";
+        break;
+    }
 
     const auto &generator = feed->generator();
     if (generator) {

@@ -54,7 +54,18 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
         const auto &feed_node = root.get_child("feed");
 
         data.id_ = feed_node.get<std::string>("id");
-        data.title_ = feed_node.get<std::string>("title");
+
+        const auto &title_node = feed_node.get_child("title");
+        data.title_.value_ = title_node.get_value<std::string>();
+        const auto title_type_node =
+            title_node.get_child_optional("<xmlattr>.type");
+        if (title_type_node) {
+            std::string type = title_type_node->get_value<std::string>();
+            if (type == "html")
+                data.title_.type_ = text::type::html;
+            else if (type == "xhtml")
+                data.title_.type_ = text::type::xhtml;
+        }
 
         const auto generator_node = feed_node.get_child_optional("generator");
         if (generator_node)

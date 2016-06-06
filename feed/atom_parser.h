@@ -34,9 +34,6 @@ class text {
   public:
     enum class type : std::uint8_t { text, html, xhtml };
 
-    text(std::string &&value, type type = type::text) noexcept
-        : value_(std::move(value)),
-          type_(type) {}
     text(text &&other) noexcept : value_(std::move(other.value_)),
                                   type_(other.type_) {}
 
@@ -44,6 +41,11 @@ class text {
     type type() const { return type_; }
 
   private:
+    friend class atom_data;
+    friend class atom_parser;
+
+    text() : type_(type::text) {}
+
     std::string value_;
     enum type type_;
 };
@@ -78,7 +80,7 @@ class atom_data {
           generator_(std::move(other.generator_)) {}
 
     const std::string &id() const { return id_; }
-    const std::string &title() const { return title_; }
+    const text &title() const { return title_; }
     const boost::optional<class generator> &generator() const {
         return generator_;
     }
@@ -88,9 +90,9 @@ class atom_data {
 
     atom_data() {}
 
-    std::string id_;    // Identifies the feed using a universally unique and
-                        // permanent URI.
-    std::string title_; // Contains a human readable title for the feed.
+    std::string id_; // Identifies the feed using a universally unique and
+                     // permanent URI.
+    text title_;     // Contains a human readable title for the feed.
     boost::optional<class generator>
         generator_; // Identifies the software used to generate the feed.
 };
