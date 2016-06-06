@@ -30,7 +30,70 @@
 #include <cpprest/http_client.h>
 
 namespace feed {
-class atom_data {};
+class text {
+  public:
+    enum class type : std::uint8_t { text, html, xhtml };
+
+    text(std::string &&value, type type = type::text) noexcept
+        : value_(std::move(value)),
+          type_(type) {}
+    text(text &&other) noexcept : value_(std::move(other.value_)),
+                                  type_(other.type_) {}
+
+    const std::string &value() const { return value_; }
+    type type() const { return type_; }
+
+  private:
+    std::string value_;
+    enum type type_;
+};
+
+class generator {
+  public:
+    generator(std::string &&value, boost::optional<std::string> &&uri,
+              boost::optional<std::string> &&version) noexcept
+        : value_(std::move(value)),
+          uri_(std::move(uri)),
+          version_(std::move(version)) {}
+    generator(generator &&other) noexcept
+        : value_(std::move(other.value_)),
+          uri_(std::move(other.uri_)),
+          version_(std::move(other.version_)) {}
+
+    const std::string &value() const { return value_; }
+    const boost::optional<std::string> &uri() const { return uri_; }
+    const boost::optional<std::string> &version() const { return version_; }
+
+  private:
+    std::string value_;
+    boost::optional<std::string> uri_;
+    boost::optional<std::string> version_;
+};
+
+class atom_data {
+  public:
+    atom_data(atom_data &&other) noexcept
+        : id_(std::move(other.id_)),
+          title_(std::move(other.title_)),
+          generator_(std::move(other.generator_)) {}
+
+    const std::string &id() const { return id_; }
+    const std::string &title() const { return title_; }
+    const boost::optional<class generator> &generator() const {
+        return generator_;
+    }
+
+  private:
+    friend class atom_parser;
+
+    atom_data() {}
+
+    std::string id_;    // Identifies the feed using a universally unique and
+                        // permanent URI.
+    std::string title_; // Contains a human readable title for the feed.
+    boost::optional<class generator>
+        generator_; // Identifies the software used to generate the feed.
+};
 
 class atom_parser {
   public:

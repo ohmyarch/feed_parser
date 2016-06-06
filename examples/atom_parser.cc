@@ -35,6 +35,45 @@
 **
 ****************************************************************************/
 
-int main(int argc, char *argv[]) {
+#include <feed/atom_parser.h>
 
+inline void open_url(const std::string &uri) {
+#if defined(_WIN32) && !defined(__cplusplus_winrt)
+    // NOTE: Windows desktop only.
+    ShellExecuteA(NULL, "open", uri.c_str(), NULL, NULL, SW_SHOWNORMAL);
+#elif defined(__APPLE__)
+    // NOTE: OS X only.
+    std::string command("open \"" + uri + "\" > /dev/null 2>&1");
+    std::system(command.c_str());
+#else
+    // NOTE: Linux/X11 only.
+    std::string command("xdg-open \"" + uri + "\" > /dev/null 2>&1");
+    std::system(command.c_str());
+#endif
+}
+
+int main(int argc, char *argv[]) {
+    feed::atom_parser parser;
+    const auto feed = parser.parse("http://ohmyarch.github.io/atom.xml");
+    if (!feed) {
+        std::cerr << "Failed.\n";
+
+        return 1;
+    }
+
+    std::cout << "id: " << feed->id() << '\n'
+              << "title: " << feed->title() << '\n';
+
+    const auto &generator = feed->generator();
+    if (generator) {
+        std::cout << "generator: " << generator->value() << '\n';
+
+        const auto &uri = generator->uri();
+        if (uri)
+            std::cout << "  uri: " << uri.value() << '\n';
+
+        const auto &version = generator->version();
+        if (version)
+            std::cout << "  version: " << version.value() << '\n';
+    }
 }
