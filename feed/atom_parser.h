@@ -95,6 +95,13 @@ class atom_data {
     text title_;     // Contains a human readable title for the feed.
     boost::optional<class generator>
         generator_; // Identifies the software used to generate the feed.
+    boost::optional<std::string> icon_; // Identifies a small image which
+                                        // provides iconic visual identification
+                                        // for the feed. Icons should be square.
+    boost::optional<std::string> logo_; // Identifies a larger image which
+                                        // provides visual identification for
+                                        // the feed. Images should be twice as
+                                        // wide as they are tall.
 };
 
 class atom_parser {
