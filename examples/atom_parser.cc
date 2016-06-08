@@ -89,4 +89,48 @@ int main(int argc, char *argv[]) {
         if (version)
             std::cout << "  version: " << version.value() << '\n';
     }
+
+    const auto &icon = feed->icon();
+    if (icon)
+        std::cout << "icon: " << icon.value() << '\n';
+
+    const auto &logo = feed->logo();
+    if (logo)
+        std::cout << "logo: " << logo.value() << '\n';
+
+    const auto &rights = feed->rights();
+    if (rights) {
+        std::cout << "rights: " << rights->value() << '\n' << "  type: ";
+
+        switch (rights->type()) {
+        case feed::text::type::text:
+            std::cout << "text\n";
+            break;
+        case feed::text::type::html:
+            std::cout << "html\n";
+            break;
+        case feed::text::type::xhtml:
+            std::cout << "xhtml\n";
+            break;
+        }
+    }
+
+    const auto &subtitle = feed->subtitle();
+    if (subtitle) {
+        std::cout << "subtitle: " << subtitle->value() << '\n' << "  type: ";
+
+        switch (subtitle->type()) {
+        case feed::text::type::text:
+            std::cout << "text\n";
+            break;
+        case feed::text::type::html:
+            std::cout << "html\n";
+            break;
+        case feed::text::type::xhtml:
+            std::cout << "xhtml\n";
+            break;
+        }
+    }
+
+    std::cout << "entries:\n";
 }

@@ -74,6 +74,45 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
                 generator_node->get_optional<std::string>("<xmlattr>.uri"),
                 generator_node->get_optional<std::string>("<xmlattr>.version"));
 
+        data.icon_ = feed_node.get_optional<std::string>("icon");
+        data.logo_ = feed_node.get_optional<std::string>("logo");
+
+        const auto rights_node = feed_node.get_child_optional("rights");
+        if (rights_node) {
+            std::string rights = rights_node->get_value<std::string>();
+            enum text::type type = text::type::text;
+            const auto rights_type_node =
+                rights_node->get_child_optional("<xmlattr>.type");
+            if (rights_type_node) {
+                std::string type_str =
+                    rights_type_node->get_value<std::string>();
+                if (type_str == "html")
+                    type = text::type::html;
+                else if (type_str == "xhtml")
+                    type = text::type::xhtml;
+            }
+
+            data.rights_.emplace(std::move(rights), type);
+        }
+
+        const auto subtitle_node = feed_node.get_child_optional("subtitle");
+        if (subtitle_node) {
+            std::string subtitle = subtitle_node->get_value<std::string>();
+            enum text::type type = text::type::text;
+            const auto subtitle_type_node =
+                subtitle_node->get_child_optional("<xmlattr>.type");
+            if (subtitle_type_node) {
+                std::string type_str =
+                    subtitle_type_node->get_value<std::string>();
+                if (type_str == "html")
+                    type = text::type::html;
+                else if (type_str == "xhtml")
+                    type = text::type::xhtml;
+            }
+
+            data.subtitle_.emplace(std::move(subtitle), type);
+        }
+
         return std::move(data);
     } catch (...) {
         std::cerr << "Error!" << std::endl;
