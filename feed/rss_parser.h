@@ -28,8 +28,8 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
 #include <cpprest/http_client.h>
+#include <feed/link.h>
 
 namespace feed {
 class category {
@@ -151,52 +151,6 @@ enum class day : std::uint8_t {
     friday,
     saturday,
     sunday
-};
-
-enum class rel : std::uint8_t {
-    alternate, // An alternate representation, such as a web page containing the
-               // same content as a feed entry.
-    enclosure, // A media object such as an audio or video file.
-    related,   // A related resource.
-    self,      // The feed itself.
-    via // The original source that authored the entry, when it's not the feed
-        // publisher.
-};
-
-class atom_link {
-  public:
-    atom_link(atom_link &&other) noexcept
-        : href_(std::move(other.href_)),
-          href_lang_(std::move(other.href_lang_)),
-          length_(other.length_),
-          title_(std::move(other.title_)),
-          type_(std::move(other.type_)),
-          rel_(other.rel_) {}
-
-    const std::string &href() const { return href_; }
-    const boost::optional<std::string> &href_lang() const { return href_lang_; }
-    const boost::optional<std::uint64_t> &length() const { return length_; }
-    const boost::optional<std::string> &title() const { return title_; }
-    const boost::optional<std::string> &type() const { return type_; }
-    const boost::optional<enum rel> &rel() const { return rel_; }
-
-  private:
-    friend class rss_parser;
-
-    atom_link() {}
-
-    std::string href_;                       // The URL of the related resource.
-    boost::optional<std::string> href_lang_; // The language used by the related
-                                             // resource using an HTML language
-                                             // code.
-    boost::optional<std::uint64_t> length_;  // The resource's size, in bytes.
-    boost::optional<std::string>
-        title_; // A human-readable description of the resource.
-    boost::optional<std::string> type_; // The resource's MIME media type.
-    boost::optional<enum rel>
-        rel_; // Contains a keyword that identifies the nature
-              // of the relationship between the linked resouce
-              // and the element.
 };
 
 class rss_parser;
@@ -406,9 +360,7 @@ class rss_data {
         return skip_days_;
     }
     const std::vector<item> &items() const { return items_; }
-    const boost::optional<class atom_link> &atom_link() const {
-        return atom_link_;
-    }
+    const boost::optional<class link> &atom_link() const { return atom_link_; }
     const boost::optional<class channel::itunes> &itunes() const {
         return itunes_;
     }
@@ -467,7 +419,7 @@ class rss_data {
                                                   // telling them which days
                                                   // they can skip.
     std::vector<item> items_;
-    boost::optional<class atom_link> atom_link_; // A relationship between a web
+    boost::optional<class link> atom_link_; // A relationship between a web
     // resource (such as a page) and an
     // RSS channel or item.
     boost::optional<class channel::itunes> itunes_;
@@ -483,4 +435,3 @@ class rss_parser { // rss 2.0
     web::http::client::http_client_config http_client_config_;
 };
 }
-

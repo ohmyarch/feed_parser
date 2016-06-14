@@ -26,8 +26,10 @@
 **
 ****************************************************************************/
 
-#include <boost/optional.hpp>
+#pragma once
+
 #include <cpprest/http_client.h>
+#include <feed/link.h>
 
 namespace feed {
 class text {
@@ -43,6 +45,7 @@ class text {
     type type() const { return type_; }
 
   private:
+    friend class entry;
     friend class atom_data;
     friend class atom_parser;
 
@@ -50,6 +53,28 @@ class text {
 
     std::string value_;
     enum type type_;
+};
+
+class person {
+  public:
+    person(std::string &&name, boost::optional<std::string> &&email,
+           boost::optional<std::string> &&uri) noexcept
+        : name_(std::move(name)),
+          email_(std::move(email)),
+          uri_(std::move(uri)) {}
+    person(person &&other) noexcept : name_(std::move(other.name_)),
+                                      email_(std::move(other.email_)),
+                                      uri_(std::move(other.uri_)) {}
+
+    const std::string &name() const { return name_; }
+    const boost::optional<std::string> &email() const { return email_; }
+    const boost::optional<std::string> &uri() const { return uri_; }
+
+  private:
+    std::string name_; // Conveys a human-readable name for the person.
+    boost::optional<std::string> email_; // Contains a home page for the person.
+    boost::optional<std::string>
+        uri_; // Contains an email address for the person.
 };
 
 class generator {
@@ -77,12 +102,16 @@ class generator {
 class entry {
   public:
     entry(entry &&other) noexcept : id_(std::move(other.id_)),
-                                    title_(other.title_) {}
+                                    title_(std::move(other.title_)) {}
 
     const std::string &id() const { return id_; }
     const text &title() const { return title_; }
 
   private:
+    friend class atom_parser;
+
+    entry() {}
+
     std::string id_; // Identifies the entry using a universally unique and
                      // permanent URI.
     text title_;     // Contains a human readable title for the entry.
@@ -93,6 +122,8 @@ class atom_data {
     atom_data(atom_data &&other) noexcept
         : id_(std::move(other.id_)),
           title_(std::move(other.title_)),
+          authors_(std::move(other.authors_)),
+          links_(std::move(other.links_)),
           generator_(std::move(other.generator_)),
           icon_(std::move(other.icon_)),
           logo_(std::move(other.logo_)),
@@ -102,6 +133,10 @@ class atom_data {
 
     const std::string &id() const { return id_; }
     const text &title() const { return title_; }
+    const boost::optional<std::vector<person>> &authors() const {
+        return authors_;
+    }
+    const boost::optional<std::vector<link>> &links() const { return links_; }
     const boost::optional<class generator> &generator() const {
         return generator_;
     }
@@ -119,6 +154,8 @@ class atom_data {
     std::string id_; // Identifies the feed using a universally unique and
                      // permanent URI.
     text title_;     // Contains a human readable title for the feed.
+    boost::optional<std::vector<person>> authors_; // Names authors of the feed.
+    boost::optional<std::vector<link>> links_; // Identifies related Web pages.
     boost::optional<class generator>
         generator_; // Identifies the software used to generate the feed.
     boost::optional<std::string> icon_; // Identifies a small image which

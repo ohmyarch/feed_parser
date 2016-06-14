@@ -37,19 +37,22 @@
 
 #include <feed/atom_parser.h>
 
-inline void open_url(const std::string &uri) {
-#if defined(_WIN32) && !defined(__cplusplus_winrt)
-    // NOTE: Windows desktop only.
-    ShellExecuteA(NULL, "open", uri.c_str(), NULL, NULL, SW_SHOWNORMAL);
-#elif defined(__APPLE__)
-    // NOTE: OS X only.
-    std::string command("open \"" + uri + "\" > /dev/null 2>&1");
-    std::system(command.c_str());
-#else
-    // NOTE: Linux/X11 only.
-    std::string command("xdg-open \"" + uri + "\" > /dev/null 2>&1");
-    std::system(command.c_str());
-#endif
+static std::ostream &operator<<(std::ostream &stream,
+                                const enum feed::text::type &text_type) {
+    switch (text_type) {
+    case feed::text::type::text:
+        stream << "text";
+
+        return stream;
+    case feed::text::type::html:
+        stream << "html";
+
+        return stream;
+    case feed::text::type::xhtml:
+        stream << "xhtml";
+
+        return stream;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -61,76 +64,117 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::cout << "id: " << feed->id() << '\n';
+    std::cout << "feed:\n"
+              << "  id: " << feed->id() << '\n';
 
     const auto &title = feed->title();
-    std::cout << "title: " << title.value() << '\n' << "  type: ";
-    switch (title.type()) {
-    case feed::text::type::text:
-        std::cout << "text\n";
-        break;
-    case feed::text::type::html:
-        std::cout << "html\n";
-        break;
-    case feed::text::type::xhtml:
-        std::cout << "xhtml\n";
-        break;
+    std::cout << "  title: " << title.value() << '\n'
+              << "    type: " << title.type() << '\n';
+
+    const auto &authors = feed->authors();
+    if (authors) {
+        std::cout << "  authors:\n";
+
+        for (const auto &author : authors.value()) {
+            std::cout << "    author:\n      name: " << author.name() << '\n';
+
+            const auto &email = author.email();
+            if (email)
+                std::cout << "      email: " << email.value() << '\n';
+
+            const auto &uri = author.uri();
+            if (uri)
+                std::cout << "      uri: " << uri.value() << '\n';
+        }
+    }
+
+    const auto &links = feed->links();
+    if (links) {
+        std::cout << "  links:\n";
+
+        for (const auto &link : links.value()) {
+            std::cout << "    link:\n      href: " << link.href() << '\n';
+
+            const auto &href_lang = link.href_lang();
+            if (href_lang)
+                std::cout << "      href_lang: " << href_lang.value() << '\n';
+
+            const auto &length = link.length();
+            if (length)
+                std::cout << "      length: " << length.value() << '\n';
+
+            const auto &title = link.title();
+            if (title)
+                std::cout << "      title: " << title.value() << '\n';
+
+            const auto &type = link.type();
+            if (type)
+                std::cout << "      type: " << type.value() << '\n';
+
+            const auto &rel = link.rel();
+            if (rel) {
+                std::cout << "      rel: ";
+
+                switch (rel.value()) {
+                case feed::rel::alternate:
+                    std::cout << "alternate\n";
+                    break;
+                case feed::rel::enclosure:
+                    std::cout << "enclosure\n";
+                    break;
+                case feed::rel::related:
+                    std::cout << "related\n";
+                    break;
+                case feed::rel::self:
+                    std::cout << "self\n";
+                    break;
+                case feed::rel::via:
+                    std::cout << "via\n";
+                    break;
+                }
+            }
+        }
     }
 
     const auto &generator = feed->generator();
     if (generator) {
-        std::cout << "generator: " << generator->value() << '\n';
+        std::cout << "  generator: " << generator->value() << '\n';
 
         const auto &uri = generator->uri();
         if (uri)
-            std::cout << "  uri: " << uri.value() << '\n';
+            std::cout << "    uri: " << uri.value() << '\n';
 
         const auto &version = generator->version();
         if (version)
-            std::cout << "  version: " << version.value() << '\n';
+            std::cout << "    version: " << version.value() << '\n';
     }
 
     const auto &icon = feed->icon();
     if (icon)
-        std::cout << "icon: " << icon.value() << '\n';
+        std::cout << "  icon: " << icon.value() << '\n';
 
     const auto &logo = feed->logo();
     if (logo)
-        std::cout << "logo: " << logo.value() << '\n';
+        std::cout << "  logo: " << logo.value() << '\n';
 
     const auto &rights = feed->rights();
-    if (rights) {
-        std::cout << "rights: " << rights->value() << '\n' << "  type: ";
-
-        switch (rights->type()) {
-        case feed::text::type::text:
-            std::cout << "text\n";
-            break;
-        case feed::text::type::html:
-            std::cout << "html\n";
-            break;
-        case feed::text::type::xhtml:
-            std::cout << "xhtml\n";
-            break;
-        }
-    }
+    if (rights)
+        std::cout << "  rights: " << rights->value() << '\n'
+                  << "    type: " << rights->type() << '\n';
 
     const auto &subtitle = feed->subtitle();
-    if (subtitle) {
-        std::cout << "subtitle: " << subtitle->value() << '\n' << "  type: ";
+    if (subtitle)
+        std::cout << "  subtitle: " << subtitle->value() << '\n'
+                  << "    type: " << subtitle->type() << '\n';
 
-        switch (subtitle->type()) {
-        case feed::text::type::text:
-            std::cout << "text\n";
-            break;
-        case feed::text::type::html:
-            std::cout << "html\n";
-            break;
-        case feed::text::type::xhtml:
-            std::cout << "xhtml\n";
-            break;
-        }
+    std::cout << "  entries:\n";
+
+    const auto &entries = feed->entries();
+    for (const auto &entry : entries) {
+        std::cout << "    entry:\n      id: " << entry.id() << '\n';
+
+        const auto &title = entry.title();
+        std::cout << "      title: " << title.value() << '\n'
+                  << "        type: " << title.type() << '\n';
     }
-
-    std::cout << "entries:\n";
 }

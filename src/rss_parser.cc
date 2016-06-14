@@ -90,7 +90,7 @@ boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
                     const auto atom_link_node_attr =
                         channel_node.get_child_optional("atom:link.<xmlattr>");
                     if (atom_link_node_attr) {
-                        atom_link atom_link;
+                        link atom_link;
                         atom_link.href_ =
                             atom_link_node_attr->get<std::string>("href");
                         atom_link.href_lang_ =
@@ -249,8 +249,9 @@ boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
 
         for (const auto &channel_child : channel_node)
             if (channel_child.first == "item") {
-                item item;
                 const auto &item_node = channel_child.second;
+
+                item item;
                 item.title_ = item_node.get_optional<std::string>("title");
                 item.link_ = item_node.get_optional<std::string>("link");
                 item.description_ =
@@ -301,6 +302,7 @@ boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
                 data.items_.emplace_back(std::move(item));
             } else if (channel_child.first == "category") {
                 const auto &category_node = channel_child.second;
+
                 categories.emplace_back(category_node.get_value<std::string>(),
                                         category_node.get_optional<std::string>(
                                             "<xmlattr>.domain"));

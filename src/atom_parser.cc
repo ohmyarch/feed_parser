@@ -79,7 +79,6 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
 
         const auto rights_node = feed_node.get_child_optional("rights");
         if (rights_node) {
-            std::string rights = rights_node->get_value<std::string>();
             enum text::type type = text::type::text;
             const auto rights_type_node =
                 rights_node->get_child_optional("<xmlattr>.type");
@@ -92,7 +91,7 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
                     type = text::type::xhtml;
             }
 
-            data.rights_.emplace(std::move(rights), type);
+            data.rights_.emplace(rights_node->get_value<std::string>(), type);
         }
 
         const auto subtitle_node = feed_node.get_child_optional("subtitle");
@@ -112,6 +111,74 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
 
             data.subtitle_.emplace(std::move(subtitle), type);
         }
+
+        std::vector<person> authors;
+        std::vector<link> links;
+
+        for (const auto &feed_child : feed_node)
+            if (feed_child.first == "entry") {
+                const auto &entry_node = feed_child.second;
+
+                entry entry;
+                entry.id_ = entry_node.get<std::string>("id");
+
+                const auto &title_node = entry_node.get_child("title");
+                entry.title_.value_ = title_node.get_value<std::string>();
+                const auto title_type_node =
+                    title_node.get_child_optional("<xmlattr>.type");
+                if (title_type_node) {
+                    std::string type =
+                        title_type_node->get_value<std::string>();
+                    if (type == "html")
+                        entry.title_.type_ = text::type::html;
+                    else if (type == "xhtml")
+                        entry.title_.type_ = text::type::xhtml;
+                }
+
+                data.entries_.emplace_back(std::move(entry));
+            } else if (feed_child.first == "author") {
+                const auto &author_node = feed_child.second;
+
+                authors.emplace_back(
+                    author_node.get<std::string>("name"),
+                    author_node.get_optional<std::string>("email"),
+                    author_node.get_optional<std::string>("uri"));
+            } else if (feed_child.first == "link") {
+                const auto &link_attr_node =
+                    feed_child.second.get_child("<xmlattr>");
+
+                link link;
+                link.href_ = link_attr_node.get<std::string>("href");
+                link.href_lang_ =
+                    link_attr_node.get_optional<std::string>("hreflang");
+                link.length_ =
+                    link_attr_node.get_optional<std::uint64_t>("length");
+                link.title_ = link_attr_node.get_optional<std::string>("title");
+                link.type_ = link_attr_node.get_optional<std::string>("type");
+
+                const auto rel_node = link_attr_node.get_child_optional("rel");
+                if (rel_node) {
+                    const std::string ref = rel_node->get_value<std::string>();
+                    if (ref == "alternate")
+                        link.rel_ = rel::alternate;
+                    else if (ref == "enclosure")
+                        link.rel_ = rel::enclosure;
+                    else if (ref == "related")
+                        link.rel_ = rel::related;
+                    else if (ref == "self")
+                        link.rel_ = rel::self;
+                    else
+                        link.rel_ = rel::via;
+                }
+
+                links.emplace_back(std::move(link));
+            }
+
+        if (!authors.empty())
+            data.authors_.emplace(std::move(authors));
+
+        if (!links.empty())
+            data.links_.emplace(std::move(links));
 
         return std::move(data);
     } catch (...) {

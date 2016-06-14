@@ -38,7 +38,7 @@
 #include <feed/date_time/tz.h>
 #include <feed/rss_parser.h>
 
-inline void open_url(const std::string &uri) {
+static void open_url(const std::string &uri) {
 #if defined(_WIN32) && !defined(__cplusplus_winrt)
     // NOTE: Windows desktop only.
     ShellExecuteA(NULL, "open", uri.c_str(), NULL, NULL, SW_SHOWNORMAL);
@@ -91,13 +91,16 @@ int main(int argc, char *argv[]) {
                   << '\n';
 
     const auto &categories = feed->categories();
-    if (categories)
+    if (categories) {
+        std::cout << "  categories:\n";
+
         for (const auto &category : categories.value()) {
-            std::cout << "  category: " << category.value() << '\n';
+            std::cout << "    category: " << category.value() << '\n';
             const auto &domain = category.domain();
             if (domain)
-                std::cout << "    domain: " << domain.value() << '\n';
+                std::cout << "      domain: " << domain.value() << '\n';
         }
+    }
 
     const auto &generator = feed->generator();
     if (generator)
@@ -200,8 +203,7 @@ int main(int argc, char *argv[]) {
     const auto &atom_link = feed->atom_link();
     if (atom_link) {
         std::cout << "  atom:\n"
-                  << "    link:\n"
-                  << "      href: " << atom_link->href() << '\n';
+                  << "    link:\n      href: " << atom_link->href() << '\n';
 
         const auto &href_lang = atom_link->href_lang();
         if (href_lang)
@@ -277,13 +279,16 @@ int main(int argc, char *argv[]) {
             std::cout << "      author: " << author.value() << '\n';
 
         const auto &categories = item.categories();
-        if (categories)
+        if (categories) {
+            std::cout << "      categories:\n";
+
             for (const auto &category : categories.value()) {
-                std::cout << "      category: " << category.value() << '\n';
+                std::cout << "        category: " << category.value() << '\n';
                 const auto &domain = category.domain();
                 if (domain)
-                    std::cout << "        domain: " << domain.value() << '\n';
+                    std::cout << "          domain: " << domain.value() << '\n';
             }
+        }
 
         const auto &comments = item.comments();
         if (comments)
