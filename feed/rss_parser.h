@@ -32,6 +32,7 @@
 #include <feed/link.h>
 
 namespace feed {
+namespace rss {
 class category {
   public:
     category(std::string &&value,
@@ -166,7 +167,7 @@ class itunes {
     }
 
   private:
-    friend class feed::rss_parser;
+    friend class rss::rss_parser;
 
     itunes() {}
 
@@ -360,7 +361,7 @@ class rss_data {
         return skip_days_;
     }
     const std::vector<item> &items() const { return items_; }
-    const boost::optional<class link> &atom_link() const { return atom_link_; }
+    const boost::optional<class atom::link> &atom_link() const { return atom_link_; }
     const boost::optional<class channel::itunes> &itunes() const {
         return itunes_;
     }
@@ -419,7 +420,8 @@ class rss_data {
                                                   // telling them which days
                                                   // they can skip.
     std::vector<item> items_;
-    boost::optional<class link> atom_link_; // A relationship between a web
+    boost::optional<class atom::link>
+        atom_link_; // A relationship between a web
     // resource (such as a page) and an
     // RSS channel or item.
     boost::optional<class channel::itunes> itunes_;
@@ -434,4 +436,5 @@ class rss_parser { // rss 2.0
   protected:
     web::http::client::http_client_config http_client_config_;
 };
+}
 }

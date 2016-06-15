@@ -60,6 +60,7 @@ static date::second_point get_time(const std::string &str) {
 }
 
 namespace feed {
+namespace rss {
 boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
     web::http::client::http_client client(
         utility::conversions::to_string_t(uri), http_client_config_);
@@ -90,7 +91,7 @@ boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
                     const auto atom_link_node_attr =
                         channel_node.get_child_optional("atom:link.<xmlattr>");
                     if (atom_link_node_attr) {
-                        link atom_link;
+                        atom::link atom_link;
                         atom_link.href_ =
                             atom_link_node_attr->get<std::string>("href");
                         atom_link.href_lang_ =
@@ -112,15 +113,15 @@ boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
                             const std::string ref =
                                 rel_node->get_value<std::string>();
                             if (ref == "alternate")
-                                atom_link.rel_ = rel::alternate;
+                                atom_link.rel_ = atom::rel::alternate;
                             else if (ref == "enclosure")
-                                atom_link.rel_ = rel::enclosure;
+                                atom_link.rel_ = atom::rel::enclosure;
                             else if (ref == "related")
-                                atom_link.rel_ = rel::related;
+                                atom_link.rel_ = atom::rel::related;
                             else if (ref == "self")
-                                atom_link.rel_ = rel::self;
+                                atom_link.rel_ = atom::rel::self;
                             else
-                                atom_link.rel_ = rel::via;
+                                atom_link.rel_ = atom::rel::via;
                         }
 
                         data.atom_link_.emplace(std::move(atom_link));
@@ -332,5 +333,6 @@ bool rss_parser::set_proxy(const std::string &uri) {
     }
 
     return false;
+}
 }
 }

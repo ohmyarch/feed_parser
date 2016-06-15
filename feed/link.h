@@ -31,6 +31,11 @@
 #include <boost/optional.hpp>
 
 namespace feed {
+namespace rss {
+class rss_parser;
+}
+
+namespace atom {
 enum class rel : std::uint8_t {
     alternate, // An alternate representation, such as a web page containing the
                // same content as a feed entry.
@@ -58,7 +63,7 @@ class link {
     const boost::optional<enum rel> &rel() const { return rel_; }
 
   private:
-    friend class rss_parser;
+    friend class rss::rss_parser;
     friend class atom_parser;
 
     link() {}
@@ -76,4 +81,5 @@ class link {
               // of the relationship between the linked resouce
               // and the element.
 };
+}
 }

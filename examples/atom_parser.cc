@@ -38,17 +38,17 @@
 #include <feed/atom_parser.h>
 
 static std::ostream &operator<<(std::ostream &stream,
-                                const enum feed::text::type &text_type) {
+                                const enum feed::atom::text::type &text_type) {
     switch (text_type) {
-    case feed::text::type::text:
+    case feed::atom::text::type::text:
         stream << "text";
 
         return stream;
-    case feed::text::type::html:
+    case feed::atom::text::type::html:
         stream << "html";
 
         return stream;
-    case feed::text::type::xhtml:
+    case feed::atom::text::type::xhtml:
         stream << "xhtml";
 
         return stream;
@@ -56,7 +56,7 @@ static std::ostream &operator<<(std::ostream &stream,
 }
 
 int main(int argc, char *argv[]) {
-    feed::atom_parser parser;
+    feed::atom::atom_parser parser;
     const auto feed = parser.parse("http://ohmyarch.github.io/atom.xml");
     if (!feed) {
         std::cerr << "Failed.\n";
@@ -116,23 +116,59 @@ int main(int argc, char *argv[]) {
                 std::cout << "      rel: ";
 
                 switch (rel.value()) {
-                case feed::rel::alternate:
+                case feed::atom::rel::alternate:
                     std::cout << "alternate\n";
                     break;
-                case feed::rel::enclosure:
+                case feed::atom::rel::enclosure:
                     std::cout << "enclosure\n";
                     break;
-                case feed::rel::related:
+                case feed::atom::rel::related:
                     std::cout << "related\n";
                     break;
-                case feed::rel::self:
+                case feed::atom::rel::self:
                     std::cout << "self\n";
                     break;
-                case feed::rel::via:
+                case feed::atom::rel::via:
                     std::cout << "via\n";
                     break;
                 }
             }
+        }
+    }
+
+    const auto &categories = feed->categories();
+    if (categories) {
+        std::cout << "  categories:\n";
+
+        for (const auto &category : categories.value()) {
+            std::cout << "    category:\n      term: " << category.term()
+                      << '\n';
+
+            const auto &scheme = category.scheme();
+            if (scheme)
+                std::cout << "      scheme: " << scheme.value() << '\n';
+
+            const auto &label = category.label();
+            if (label)
+                std::cout << "      label: " << label.value() << '\n';
+        }
+    }
+
+    const auto &contributors = feed->contributors();
+    if (contributors) {
+        std::cout << "  contributors:\n";
+
+        for (const auto &contributor : contributors.value()) {
+            std::cout << "    contributor:\n      name: " << contributor.name()
+                      << '\n';
+
+            const auto &email = contributor.email();
+            if (email)
+                std::cout << "      email: " << email.value() << '\n';
+
+            const auto &uri = contributor.uri();
+            if (uri)
+                std::cout << "      uri: " << uri.value() << '\n';
         }
     }
 

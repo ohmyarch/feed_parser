@@ -35,6 +35,7 @@ class atom_exception : public std::exception {
 };
 
 namespace feed {
+namespace atom {
 boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
     web::http::client::http_client client(
         utility::conversions::to_string_t(uri), http_client_config_);
@@ -114,6 +115,8 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
 
         std::vector<person> authors;
         std::vector<link> links;
+        std::vector<category> categories;
+        std::vector<person> contributors;
 
         for (const auto &feed_child : feed_node)
             if (feed_child.first == "entry") {
@@ -172,6 +175,21 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
                 }
 
                 links.emplace_back(std::move(link));
+            } else if (feed_child.first == "category") {
+                const auto &category_attr_node =
+                    feed_child.second.get_child("<xmlattr>");
+
+                categories.emplace_back(
+                    category_attr_node.get<std::string>("term"),
+                    category_attr_node.get_optional<std::string>("scheme"),
+                    category_attr_node.get_optional<std::string>("label"));
+            } else if (feed_child.first == "contributor") {
+                const auto &contributor_node = feed_child.second;
+
+                contributors.emplace_back(
+                    contributor_node.get<std::string>("name"),
+                    contributor_node.get_optional<std::string>("email"),
+                    contributor_node.get_optional<std::string>("uri"));
             }
 
         if (!authors.empty())
@@ -180,11 +198,18 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
         if (!links.empty())
             data.links_.emplace(std::move(links));
 
+        if (!categories.empty())
+            data.categories_.emplace(std::move(categories));
+
+        if (!contributors.empty())
+            data.contributors_.emplace(std::move(contributors));
+
         return std::move(data);
     } catch (...) {
         std::cerr << "Error!" << std::endl;
     }
 
     return {};
+}
 }
 }

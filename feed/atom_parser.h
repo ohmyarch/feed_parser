@@ -32,6 +32,7 @@
 #include <feed/link.h>
 
 namespace feed {
+namespace atom {
 class text {
   public:
     enum class type : std::uint8_t { text, html, xhtml };
@@ -75,6 +76,27 @@ class person {
     boost::optional<std::string> email_; // Contains a home page for the person.
     boost::optional<std::string>
         uri_; // Contains an email address for the person.
+};
+
+class category {
+  public:
+    category(std::string &&term, boost::optional<std::string> &&scheme,
+             boost::optional<std::string> &&label) noexcept
+        : term_(std::move(term)),
+          scheme_(std::move(scheme)),
+          label_(std::move(label)) {}
+    category(category &&other) noexcept : term_(std::move(other.term_)),
+                                          scheme_(std::move(other.scheme_)),
+                                          label_(std::move(other.label_)) {}
+
+    const std::string &term() const { return term_; }
+    const boost::optional<std::string> &scheme() const { return scheme_; }
+    const boost::optional<std::string> &label() const { return label_; }
+
+  private:
+    std::string term_;
+    boost::optional<std::string> scheme_;
+    boost::optional<std::string> label_;
 };
 
 class generator {
@@ -124,6 +146,8 @@ class atom_data {
           title_(std::move(other.title_)),
           authors_(std::move(other.authors_)),
           links_(std::move(other.links_)),
+          categories_(std::move(other.categories_)),
+          contributors_(std::move(other.contributors_)),
           generator_(std::move(other.generator_)),
           icon_(std::move(other.icon_)),
           logo_(std::move(other.logo_)),
@@ -137,6 +161,12 @@ class atom_data {
         return authors_;
     }
     const boost::optional<std::vector<link>> &links() const { return links_; }
+    const boost::optional<std::vector<category>> &categories() const {
+        return categories_;
+    }
+    const boost::optional<std::vector<person>> &contributors() const {
+        return contributors_;
+    }
     const boost::optional<class generator> &generator() const {
         return generator_;
     }
@@ -156,6 +186,10 @@ class atom_data {
     text title_;     // Contains a human readable title for the feed.
     boost::optional<std::vector<person>> authors_; // Names authors of the feed.
     boost::optional<std::vector<link>> links_; // Identifies related Web pages.
+    boost::optional<std::vector<category>>
+        categories_; // Specifies a category that the feed belongs to.
+    boost::optional<std::vector<person>>
+        contributors_; // Names contributors to the feed.
     boost::optional<class generator>
         generator_; // Identifies the software used to generate the feed.
     boost::optional<std::string> icon_; // Identifies a small image which
@@ -179,4 +213,5 @@ class atom_parser {
   private:
     web::http::client::http_client_config http_client_config_;
 };
+}
 }

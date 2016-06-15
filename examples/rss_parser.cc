@@ -54,7 +54,7 @@ static void open_url(const std::string &uri) {
 }
 
 int main(int argc, char *argv[]) {
-    feed::rss_parser parser;
+    feed::rss::rss_parser parser;
     const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
     if (!feed) {
         std::cerr << "Failed.\n";
@@ -117,8 +117,9 @@ int main(int argc, char *argv[]) {
                   << "    path: " << cloud->path() << '\n'
                   << "    port: " << cloud->port() << '\n'
                   << "    protocol: "
-                  << ((cloud->protocol() == feed::protocol::xml_rpc) ? "xml-rpc"
-                                                                     : "soap")
+                  << ((cloud->protocol() == feed::rss::protocol::xml_rpc)
+                          ? "xml-rpc"
+                          : "soap")
                   << '\n'
                   << "    register_procedure: " << cloud->register_procedure()
                   << '\n';
@@ -165,8 +166,9 @@ int main(int argc, char *argv[]) {
         std::cout << "\b\b \n";
     }
 
-    std::vector<feed::day> vec{feed::day::sunday, feed::day::wednesday,
-                               feed::day::monday};
+    std::vector<feed::rss::day> vec{feed::rss::day::sunday,
+                                    feed::rss::day::wednesday,
+                                    feed::rss::day::monday};
 
     const auto &skip_days = feed->skip_days();
     if (skip_days) {
@@ -174,25 +176,25 @@ int main(int argc, char *argv[]) {
 
         for (const auto day : skip_days.value())
             switch (day) {
-            case feed::day::monday:
+            case feed::rss::day::monday:
                 std::cout << "Monday | ";
                 break;
-            case feed::day::tuesday:
+            case feed::rss::day::tuesday:
                 std::cout << "Tuesday | ";
                 break;
-            case feed::day::wednesday:
+            case feed::rss::day::wednesday:
                 std::cout << "Wednesday | ";
                 break;
-            case feed::day::thursday:
+            case feed::rss::day::thursday:
                 std::cout << "Thursday | ";
                 break;
-            case feed::day::friday:
+            case feed::rss::day::friday:
                 std::cout << "Friday | ";
                 break;
-            case feed::day::saturday:
+            case feed::rss::day::saturday:
                 std::cout << "Saturday | ";
                 break;
-            case feed::day::sunday:
+            case feed::rss::day::sunday:
                 std::cout << "Sunday | ";
                 break;
             }
@@ -226,19 +228,19 @@ int main(int argc, char *argv[]) {
             std::cout << "      rel: ";
 
             switch (rel.value()) {
-            case feed::rel::alternate:
+            case feed::atom::rel::alternate:
                 std::cout << "alternate\n";
                 break;
-            case feed::rel::enclosure:
+            case feed::atom::rel::enclosure:
                 std::cout << "enclosure\n";
                 break;
-            case feed::rel::related:
+            case feed::atom::rel::related:
                 std::cout << "related\n";
                 break;
-            case feed::rel::self:
+            case feed::atom::rel::self:
                 std::cout << "self\n";
                 break;
-            case feed::rel::via:
+            case feed::atom::rel::via:
                 std::cout << "via\n";
                 break;
             }
