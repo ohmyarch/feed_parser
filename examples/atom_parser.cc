@@ -55,6 +55,32 @@ static std::ostream &operator<<(std::ostream &stream,
     }
 }
 
+static std::ostream &operator<<(std::ostream &stream,
+                                const enum feed::atom::rel &rel) {
+    switch (rel) {
+    case feed::atom::rel::alternate:
+        stream << "alternate";
+
+        return stream;
+    case feed::atom::rel::enclosure:
+        stream << "enclosure";
+
+        return stream;
+    case feed::atom::rel::related:
+        stream << "related";
+
+        return stream;
+    case feed::atom::rel::self:
+        stream << "self";
+
+        return stream;
+    case feed::atom::rel::via:
+        stream << "via";
+
+        return stream;
+    }
+}
+
 int main(int argc, char *argv[]) {
     feed::atom::atom_parser parser;
     const auto feed = parser.parse("http://ohmyarch.github.io/atom.xml");
@@ -64,12 +90,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::cout << "feed:\n"
-              << "  id: " << feed->id() << '\n';
+    std::cout << "feed:\n  id: " << feed->id() << '\n';
 
     const auto &title = feed->title();
-    std::cout << "  title: " << title.value() << '\n'
-              << "    type: " << title.type() << '\n';
+    std::cout << "  title: " << title.value() << "\n    type: " << title.type()
+              << '\n';
 
     const auto &authors = feed->authors();
     if (authors) {
@@ -113,25 +138,7 @@ int main(int argc, char *argv[]) {
 
             const auto &rel = link.rel();
             if (rel) {
-                std::cout << "      rel: ";
-
-                switch (rel.value()) {
-                case feed::atom::rel::alternate:
-                    std::cout << "alternate\n";
-                    break;
-                case feed::atom::rel::enclosure:
-                    std::cout << "enclosure\n";
-                    break;
-                case feed::atom::rel::related:
-                    std::cout << "related\n";
-                    break;
-                case feed::atom::rel::self:
-                    std::cout << "self\n";
-                    break;
-                case feed::atom::rel::via:
-                    std::cout << "via\n";
-                    break;
-                }
+                std::cout << "      rel: " << rel.value() << '\n';
             }
         }
     }
@@ -195,13 +202,13 @@ int main(int argc, char *argv[]) {
 
     const auto &rights = feed->rights();
     if (rights)
-        std::cout << "  rights: " << rights->value() << '\n'
-                  << "    type: " << rights->type() << '\n';
+        std::cout << "  rights: " << rights->value()
+                  << "\n    type: " << rights->type() << '\n';
 
     const auto &subtitle = feed->subtitle();
     if (subtitle)
-        std::cout << "  subtitle: " << subtitle->value() << '\n'
-                  << "    type: " << subtitle->type() << '\n';
+        std::cout << "  subtitle: " << subtitle->value()
+                  << "\n    type: " << subtitle->type() << '\n';
 
     std::cout << "  entries:\n";
 
@@ -210,7 +217,67 @@ int main(int argc, char *argv[]) {
         std::cout << "    entry:\n      id: " << entry.id() << '\n';
 
         const auto &title = entry.title();
-        std::cout << "      title: " << title.value() << '\n'
-                  << "        type: " << title.type() << '\n';
+        std::cout << "      title: " << title.value()
+                  << "\n        type: " << title.type() << '\n';
+
+        const auto &authors = entry.authors();
+        if (authors) {
+            std::cout << "      authors:\n";
+
+            for (const auto &author : authors.value()) {
+                std::cout << "        author:\n          name: "
+                          << author.name() << '\n';
+
+                const auto &email = author.email();
+                if (email)
+                    std::cout << "          email: " << email.value() << '\n';
+
+                const auto &uri = author.uri();
+                if (uri)
+                    std::cout << "          uri: " << uri.value() << '\n';
+            }
+        }
+
+        /* const auto &content = entry.content();
+            if (content)
+                std::cout << "      content: " << content->value()
+                          << "\n        type: " << content->type() << '\n';*/
+
+        const auto &links = entry.links();
+        if (links) {
+            std::cout << "      links:\n";
+
+            for (const auto &link : links.value()) {
+                std::cout << "        link:\n          href: " << link.href()
+                          << '\n';
+
+                const auto &href_lang = link.href_lang();
+                if (href_lang)
+                    std::cout << "          href_lang: " << href_lang.value()
+                              << '\n';
+
+                const auto &length = link.length();
+                if (length)
+                    std::cout << "          length: " << length.value() << '\n';
+
+                const auto &title = link.title();
+                if (title)
+                    std::cout << "          title: " << title.value() << '\n';
+
+                const auto &type = link.type();
+                if (type)
+                    std::cout << "          type: " << type.value() << '\n';
+
+                const auto &rel = link.rel();
+                if (rel) {
+                    std::cout << "          rel: " << rel.value() << '\n';
+                }
+            }
+        }
+
+        /* const auto &summary = entry.summary();
+         if (summary)
+             std::cout << "      summary: " << summary->value()
+                       << "\n        type: " << summary->type() << '\n'; */
     }
 }

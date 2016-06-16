@@ -119,27 +119,7 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
         std::vector<person> contributors;
 
         for (const auto &feed_child : feed_node)
-            if (feed_child.first == "entry") {
-                const auto &entry_node = feed_child.second;
-
-                entry entry;
-                entry.id_ = entry_node.get<std::string>("id");
-
-                const auto &title_node = entry_node.get_child("title");
-                entry.title_.value_ = title_node.get_value<std::string>();
-                const auto title_type_node =
-                    title_node.get_child_optional("<xmlattr>.type");
-                if (title_type_node) {
-                    std::string type =
-                        title_type_node->get_value<std::string>();
-                    if (type == "html")
-                        entry.title_.type_ = text::type::html;
-                    else if (type == "xhtml")
-                        entry.title_.type_ = text::type::xhtml;
-                }
-
-                data.entries_.emplace_back(std::move(entry));
-            } else if (feed_child.first == "author") {
+            if (feed_child.first == "author") {
                 const auto &author_node = feed_child.second;
 
                 authors.emplace_back(
@@ -190,6 +170,126 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
                     contributor_node.get<std::string>("name"),
                     contributor_node.get_optional<std::string>("email"),
                     contributor_node.get_optional<std::string>("uri"));
+            } else if (feed_child.first == "entry") {
+                const auto &entry_node = feed_child.second;
+
+                entry entry;
+                entry.id_ = entry_node.get<std::string>("id");
+
+                const auto &title_node = entry_node.get_child("title");
+                entry.title_.value_ = title_node.get_value<std::string>();
+                const auto title_type_node =
+                    title_node.get_child_optional("<xmlattr>.type");
+                if (title_type_node) {
+                    std::string type =
+                        title_type_node->get_value<std::string>();
+                    if (type == "html")
+                        entry.title_.type_ = text::type::html;
+                    else if (type == "xhtml")
+                        entry.title_.type_ = text::type::xhtml;
+                }
+
+                const auto content_node =
+                    entry_node.get_child_optional("content");
+                if (content_node) {
+                    std::string content =
+                        content_node->get_value<std::string>();
+                    const auto content_type_node =
+                        content_node->get_child_optional("<xmlattr>.type");
+                    if (content_type_node) {
+                        std::string type =
+                            content_type_node->get_value<std::string>();
+                        if (type == "html")
+                            entry.content_.emplace(std::move(content),
+                                                   text::type::html);
+                        else if (type == "xhtml")
+                            entry.content_.emplace(std::move(content),
+                                                   text::type::xhtml);
+                        else
+                            entry.content_.emplace(std::move(content));
+                    } else {
+                        entry.content_.emplace(std::move(content));
+                    }
+                }
+
+                const auto summary_node =
+                    entry_node.get_child_optional("summary");
+                if (summary_node) {
+                    std::string summary =
+                        summary_node->get_value<std::string>();
+                    const auto summary_type_node =
+                        summary_node->get_child_optional("<xmlattr>.type");
+                    if (summary_type_node) {
+                        std::string type =
+                            summary_type_node->get_value<std::string>();
+                        if (type == "html")
+                            entry.summary_.emplace(std::move(summary),
+                                                   text::type::html);
+                        else if (type == "xhtml")
+                            entry.summary_.emplace(std::move(summary),
+                                                   text::type::xhtml);
+                        else
+                            entry.summary_.emplace(std::move(summary));
+                    } else {
+                        entry.summary_.emplace(std::move(summary));
+                    }
+                }
+
+                std::vector<person> authors;
+                std::vector<link> links;
+
+                for (const auto &entry_child : entry_node)
+                    if (entry_child.first == "author") {
+                        const auto &author_node = entry_child.second;
+
+                        authors.emplace_back(
+                            author_node.get<std::string>("name"),
+                            author_node.get_optional<std::string>("email"),
+                            author_node.get_optional<std::string>("uri"));
+                    } else if (entry_child.first == "link") {
+                        const auto &link_attr_node =
+                            entry_child.second.get_child("<xmlattr>");
+
+                        link link;
+                        link.href_ = link_attr_node.get<std::string>("href");
+                        link.href_lang_ =
+                            link_attr_node.get_optional<std::string>(
+                                "hreflang");
+                        link.length_ =
+                            link_attr_node.get_optional<std::uint64_t>(
+                                "length");
+                        link.title_ =
+                            link_attr_node.get_optional<std::string>("title");
+                        link.type_ =
+                            link_attr_node.get_optional<std::string>("type");
+
+                        const auto rel_node =
+                            link_attr_node.get_child_optional("rel");
+                        if (rel_node) {
+                            const std::string ref =
+                                rel_node->get_value<std::string>();
+                            if (ref == "alternate")
+                                link.rel_ = rel::alternate;
+                            else if (ref == "enclosure")
+                                link.rel_ = rel::enclosure;
+                            else if (ref == "related")
+                                link.rel_ = rel::related;
+                            else if (ref == "self")
+                                link.rel_ = rel::self;
+                            else
+                                link.rel_ = rel::via;
+                        }
+
+                        links.emplace_back(std::move(link));
+                    }
+
+                if (!authors.empty())
+                    entry.authors_.emplace(std::move(authors));
+
+                if (!links.empty())
+                    entry.links_.emplace(std::move(links));
+
+                data.entries_.emplace_back(std::move(entry));
             }
 
         if (!authors.empty())

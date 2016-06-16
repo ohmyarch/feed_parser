@@ -37,8 +37,9 @@ class text {
   public:
     enum class type : std::uint8_t { text, html, xhtml };
 
-    text(std::string &&value, type type) noexcept : value_(std::move(value)),
-                                                    type_(type) {}
+    text(std::string &&value, type type = type::text) noexcept
+        : value_(std::move(value)),
+          type_(type) {}
     text(text &&other) noexcept : value_(std::move(other.value_)),
                                   type_(other.type_) {}
 
@@ -124,10 +125,20 @@ class generator {
 class entry {
   public:
     entry(entry &&other) noexcept : id_(std::move(other.id_)),
-                                    title_(std::move(other.title_)) {}
+                                    title_(std::move(other.title_)),
+                                    authors_(std::move(other.authors_)),
+                                    content_(std::move(other.content_)),
+                                    links_(std::move(other.links_)),
+                                    summary_(std::move(other.summary_)) {}
 
     const std::string &id() const { return id_; }
     const text &title() const { return title_; }
+    const boost::optional<std::vector<person>> &authors() const {
+        return authors_;
+    }
+    const boost::optional<text> &content() const { return content_; }
+    const boost::optional<std::vector<link>> &links() const { return links_; }
+    const boost::optional<text> &summary() const { return summary_; }
 
   private:
     friend class atom_parser;
@@ -137,6 +148,17 @@ class entry {
     std::string id_; // Identifies the entry using a universally unique and
                      // permanent URI.
     text title_;     // Contains a human readable title for the entry.
+    boost::optional<std::vector<person>>
+        authors_; // Names authors of the entry.
+    boost::optional<text>
+        content_; // Contains orlinksto the completecontent ofthe entry.
+    boost::optional<std::vector<link>> links_; // Identifies related Web pages.
+    boost::optional<text>
+        summary_; // Conveys a short summary, abstract, or excerpt of the entry.
+    boost::optional<std::vector<category>>
+        categories_; // Specifies categories that the entry belongs to.
+    boost::optional<text> rights_; // Conveys information about rights, e.g.
+                                   // copyrights, held in and over the entry.
 };
 
 class atom_data {
@@ -187,7 +209,7 @@ class atom_data {
     boost::optional<std::vector<person>> authors_; // Names authors of the feed.
     boost::optional<std::vector<link>> links_; // Identifies related Web pages.
     boost::optional<std::vector<category>>
-        categories_; // Specifies a category that the feed belongs to.
+        categories_; // Specifies categories that the feed belongs to.
     boost::optional<std::vector<person>>
         contributors_; // Names contributors to the feed.
     boost::optional<class generator>
