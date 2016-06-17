@@ -27,9 +27,10 @@
 ****************************************************************************/
 
 #include <boost/property_tree/xml_parser.hpp>
-#include <cpprest/details/basic_types.h>
 #include <feed/date_time/tz.h>
 #include <feed/rss_parser.h>
+#include <iostream>
+#include <unordered_map>
 
 static std::unordered_map<std::string, std::string> offset_map = {
     {"GMT", "+0000"}, {"UTC", "+0000"}, {"UT", "+0000"},  {"EDT", "-0400"},
@@ -61,22 +62,15 @@ static date::second_point get_time(const std::string &str) {
 
 namespace feed {
 namespace rss {
-boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
-    web::http::client::http_client client(
-        utility::conversions::to_string_t(uri), http_client_config_);
-    const auto response = client.request(web::http::methods::GET);
-
+boost::optional<rss_data> parse_rss(const std::string &xml_str) {
     boost::property_tree::ptree root;
+
+    std::istringstream stream(xml_str);
 
     rss_data data;
 
     try {
-        // FIXME
-        utility::istringstream_t stream(
-            response.get().extract_string(true).get());
-
         boost::property_tree::read_xml(stream, root);
-        // boost::property_tree::read_xml("//home//michael//feed.xml", root);
 
         const auto &rss_node = root.get_child("rss");
 
@@ -313,26 +307,11 @@ boost::optional<rss_data> rss_parser::parse(const std::string &uri) {
             data.categories_.emplace(std::move(categories));
 
         return std::move(data);
-    } catch (const web::http::http_exception &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
     } catch (const std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
 
     return {};
-}
-
-bool rss_parser::set_proxy(const std::string &uri) {
-    try {
-        http_client_config_.set_proxy(
-            web::web_proxy(utility::conversions::to_string_t(uri)));
-
-        return true;
-    } catch (const web::uri_exception &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-
-    return false;
 }
 }
 }

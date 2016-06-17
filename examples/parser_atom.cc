@@ -36,6 +36,7 @@
 ****************************************************************************/
 
 #include <feed/atom_parser.h>
+#include <feed/utilities.h>
 
 static std::ostream &operator<<(std::ostream &stream,
                                 const enum feed::atom::text::type &text_type) {
@@ -82,8 +83,16 @@ static std::ostream &operator<<(std::ostream &stream,
 }
 
 int main(int argc, char *argv[]) {
-    feed::atom::atom_parser parser;
-    const auto feed = parser.parse("http://ohmyarch.github.io/atom.xml");
+    feed::utility::xml xml;
+
+    const auto xml_str = xml.to_string("https://ohmyarch.github.io/atom.xml");
+    if (!xml_str) {
+        std::cerr << "Failed.\n";
+
+        return 1;
+    }
+
+    const auto feed = feed::atom::parse_atom(xml_str.value());
     if (!feed) {
         std::cerr << "Failed.\n";
 
@@ -279,5 +288,46 @@ int main(int argc, char *argv[]) {
          if (summary)
              std::cout << "      summary: " << summary->value()
                        << "\n        type: " << summary->type() << '\n'; */
+
+        const auto &categories = entry.categories();
+        if (categories) {
+            std::cout << "      categories:\n";
+
+            for (const auto &category : categories.value()) {
+                std::cout << "        category:\n          term: "
+                          << category.term() << '\n';
+
+                const auto &scheme = category.scheme();
+                if (scheme)
+                    std::cout << "          scheme: " << scheme.value() << '\n';
+
+                const auto &label = category.label();
+                if (label)
+                    std::cout << "          label: " << label.value() << '\n';
+            }
+        }
+
+        const auto &rights = entry.rights();
+        if (rights)
+            std::cout << "      rights: " << rights->value()
+                      << "\n        type: " << rights->type() << '\n';
+
+        const auto &contributors = entry.contributors();
+        if (contributors) {
+            std::cout << "      contributors:\n";
+
+            for (const auto &contributor : contributors.value()) {
+                std::cout << "        contributor:\n          name: "
+                          << contributor.name() << '\n';
+
+                const auto &email = contributor.email();
+                if (email)
+                    std::cout << "          email: " << email.value() << '\n';
+
+                const auto &uri = contributor.uri();
+                if (uri)
+                    std::cout << "          uri: " << uri.value() << '\n';
+            }
+        }
     }
 }

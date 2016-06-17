@@ -1,5 +1,5 @@
-add_executable(rss_parser rss_parser.cc)
-add_executable(atom_parser atom_parser.cc)
+add_executable(parser_rss parser_rss.cc)
+add_executable(parser_atom parser_atom.cc)
 
 set(FEED_PARSER_LIBRARIES
   ${Boost_LIBRARIES}
@@ -9,5 +9,5 @@ set(FEED_PARSER_LIBRARIES
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-target_link_libraries(rss_parser ${FEED_PARSER_LIBRARIES})
-target_link_libraries(atom_parser ${FEED_PARSER_LIBRARIES})
+target_link_libraries(parser_rss ${FEED_PARSER_LIBRARIES})
+target_link_libraries(parser_atom ${FEED_PARSER_LIBRARIES})

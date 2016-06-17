@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include <cpprest/http_client.h>
+#include <vector>
 #include <feed/link.h>
 
 namespace feed {
@@ -49,7 +49,7 @@ class text {
   private:
     friend class entry;
     friend class atom_data;
-    friend class atom_parser;
+    friend boost::optional<atom_data> parse_atom(const std::string &xml_str);
 
     text() : type_(type::text) {}
 
@@ -124,12 +124,16 @@ class generator {
 
 class entry {
   public:
-    entry(entry &&other) noexcept : id_(std::move(other.id_)),
-                                    title_(std::move(other.title_)),
-                                    authors_(std::move(other.authors_)),
-                                    content_(std::move(other.content_)),
-                                    links_(std::move(other.links_)),
-                                    summary_(std::move(other.summary_)) {}
+    entry(entry &&other) noexcept
+        : id_(std::move(other.id_)),
+          title_(std::move(other.title_)),
+          authors_(std::move(other.authors_)),
+          content_(std::move(other.content_)),
+          links_(std::move(other.links_)),
+          summary_(std::move(other.summary_)),
+          categories_(std::move(other.categories_)),
+          rights_(std::move(other.rights_)),
+          contributors_(std::move(other.contributors_)) {}
 
     const std::string &id() const { return id_; }
     const text &title() const { return title_; }
@@ -139,9 +143,16 @@ class entry {
     const boost::optional<text> &content() const { return content_; }
     const boost::optional<std::vector<link>> &links() const { return links_; }
     const boost::optional<text> &summary() const { return summary_; }
+    const boost::optional<std::vector<category>> &categories() const {
+        return categories_;
+    }
+    const boost::optional<text> &rights() const { return rights_; }
+    const boost::optional<std::vector<person>> &contributors() const {
+        return contributors_;
+    }
 
   private:
-    friend class atom_parser;
+    friend boost::optional<atom_data> parse_atom(const std::string &xml_str);
 
     entry() {}
 
@@ -159,6 +170,8 @@ class entry {
         categories_; // Specifies categories that the entry belongs to.
     boost::optional<text> rights_; // Conveys information about rights, e.g.
                                    // copyrights, held in and over the entry.
+    boost::optional<std::vector<person>>
+        contributors_; // Names contributors to the entry.
 };
 
 class atom_data {
@@ -199,7 +212,7 @@ class atom_data {
     const std::vector<entry> &entries() const { return entries_; }
 
   private:
-    friend class atom_parser;
+    friend boost::optional<atom_data> parse_atom(const std::string &xml_str);
 
     atom_data() {}
 
@@ -228,12 +241,6 @@ class atom_data {
     std::vector<entry> entries_;
 };
 
-class atom_parser {
-  public:
-    boost::optional<atom_data> parse(const std::string &uri);
-
-  private:
-    web::http::client::http_client_config http_client_config_;
-};
+boost::optional<atom_data> parse_atom(const std::string &xml_str);
 }
 }

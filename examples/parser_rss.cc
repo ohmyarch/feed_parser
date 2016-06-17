@@ -37,6 +37,7 @@
 
 #include <feed/date_time/tz.h>
 #include <feed/rss_parser.h>
+#include <feed/utilities.h>
 
 static void open_url(const std::string &uri) {
 #if defined(_WIN32) && !defined(__cplusplus_winrt)
@@ -54,8 +55,16 @@ static void open_url(const std::string &uri) {
 }
 
 int main(int argc, char *argv[]) {
-    feed::rss::rss_parser parser;
-    const auto feed = parser.parse("https://ipn.li/kernelpanic/feed");
+    feed::utility::xml xml;
+
+    const auto xml_str = xml.to_string("https://ipn.li/kernelpanic/feed");
+    if (!xml_str) {
+        std::cerr << "Failed.\n";
+
+        return 1;
+    }
+
+    const auto feed = feed::rss::parse_rss(xml_str.value());
     if (!feed) {
         std::cerr << "Failed.\n";
 
@@ -72,11 +81,11 @@ int main(int argc, char *argv[]) {
         std::cout << "  copyright: " << copyright.value() << '\n';
 
     const auto &managing_editor = feed->managing_editor();
-    if (copyright)
+    if (managing_editor)
         std::cout << "  managing_editor: " << managing_editor.value() << '\n';
 
     const auto &web_master = feed->web_master();
-    if (copyright)
+    if (web_master)
         std::cout << "  web_master: " << web_master.value() << '\n';
 
     const auto &pub_date = feed->pub_date();

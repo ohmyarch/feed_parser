@@ -28,11 +28,12 @@
 
 #pragma once
 
-#include <cpprest/http_client.h>
 #include <feed/link.h>
 
 namespace feed {
 namespace rss {
+class rss_data;
+
 class category {
   public:
     category(std::string &&value,
@@ -71,7 +72,7 @@ class cloud {
     }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     cloud() {}
 
@@ -105,7 +106,7 @@ class image {
     }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     image() {}
 
@@ -131,7 +132,7 @@ class text_input {
     const std::string &link() const { return link_; }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     text_input() {}
 
@@ -154,8 +155,6 @@ enum class day : std::uint8_t {
     sunday
 };
 
-class rss_parser;
-
 namespace channel {
 class itunes {
   public:
@@ -167,7 +166,7 @@ class itunes {
     }
 
   private:
-    friend class rss::rss_parser;
+    friend boost::optional<rss::rss_data> rss::parse_rss(const std::string &xml_str);
 
     itunes() {}
 
@@ -190,7 +189,7 @@ class enclosure {
     const std::string &type() const { return type_; }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     std::string url_;                       // Where the enclosure is located.
     boost::optional<std::uint64_t> length_; // How big it is in bytes
@@ -210,7 +209,7 @@ class guid {
     bool is_perma_link() const { return is_perma_link_; }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     std::string value_;
     bool is_perma_link_; // If its value is false, the guid may not be assumed
@@ -229,7 +228,7 @@ class source {
     const std::string &url() const { return url_; }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     std::string value_;
     std::string url_;
@@ -272,7 +271,7 @@ class item {
     const boost::optional<class source> &source() const { return source_; }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     item() {}
 
@@ -361,13 +360,15 @@ class rss_data {
         return skip_days_;
     }
     const std::vector<item> &items() const { return items_; }
-    const boost::optional<class atom::link> &atom_link() const { return atom_link_; }
+    const boost::optional<class atom::link> &atom_link() const {
+        return atom_link_;
+    }
     const boost::optional<class channel::itunes> &itunes() const {
         return itunes_;
     }
 
   private:
-    friend class rss_parser;
+    friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
     rss_data() {}
 
@@ -427,14 +428,6 @@ class rss_data {
     boost::optional<class channel::itunes> itunes_;
 };
 
-class rss_parser { // rss 2.0
-  public:
-    boost::optional<rss_data> parse(const std::string &uri);
-
-    bool set_proxy(const std::string &uri);
-
-  protected:
-    web::http::client::http_client_config http_client_config_;
-};
+boost::optional<rss_data> parse_rss(const std::string &xml_str);
 }
 }

@@ -32,7 +32,9 @@
 
 namespace feed {
 namespace rss {
-class rss_parser;
+class rss_data;
+
+boost::optional<rss_data> parse_rss(const std::string &xml_str);
 }
 
 namespace atom {
@@ -45,6 +47,8 @@ enum class rel : std::uint8_t {
     via // The original source that authored the entry, when it's not the feed
         // publisher.
 };
+
+class atom_data;
 
 class link {
   public:
@@ -63,8 +67,8 @@ class link {
     const boost::optional<enum rel> &rel() const { return rel_; }
 
   private:
-    friend class rss::rss_parser;
-    friend class atom_parser;
+    friend boost::optional<rss::rss_data> rss::parse_rss(const std::string &xml_str);
+    friend boost::optional<atom_data> parse_atom(const std::string &xml_str);
 
     link() {}
 

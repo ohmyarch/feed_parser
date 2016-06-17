@@ -26,6 +26,7 @@
 **
 ****************************************************************************/
 
+#include <iostream>
 #include <boost/property_tree/xml_parser.hpp>
 #include <feed/atom_parser.h>
 
@@ -36,20 +37,14 @@ class atom_exception : public std::exception {
 
 namespace feed {
 namespace atom {
-boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
-    web::http::client::http_client client(
-        utility::conversions::to_string_t(uri), http_client_config_);
-    const auto response = client.request(web::http::methods::GET);
-
+boost::optional<atom_data> parse_atom(const std::string &xml_str) {
     boost::property_tree::ptree root;
+
+    std::istringstream stream(xml_str);
 
     atom_data data;
 
     try {
-        // FIXME
-        utility::istringstream_t stream(
-            response.get().extract_string(true).get());
-
         boost::property_tree::read_xml(stream, root);
 
         const auto &feed_node = root.get_child("feed");
@@ -235,8 +230,29 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
                     }
                 }
 
+                const auto rights_node =
+                    entry_node.get_child_optional("rights");
+                if (rights_node) {
+                    enum text::type type = text::type::text;
+                    const auto rights_type_node =
+                        rights_node->get_child_optional("<xmlattr>.type");
+                    if (rights_type_node) {
+                        std::string type_str =
+                            rights_type_node->get_value<std::string>();
+                        if (type_str == "html")
+                            type = text::type::html;
+                        else if (type_str == "xhtml")
+                            type = text::type::xhtml;
+                    }
+
+                    entry.rights_.emplace(rights_node->get_value<std::string>(),
+                                          type);
+                }
+
                 std::vector<person> authors;
                 std::vector<link> links;
+                std::vector<category> categories;
+                std::vector<person> contributors;
 
                 for (const auto &entry_child : entry_node)
                     if (entry_child.first == "author") {
@@ -281,6 +297,23 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
                         }
 
                         links.emplace_back(std::move(link));
+                    } else if (entry_child.first == "category") {
+                        const auto &category_attr_node =
+                            entry_child.second.get_child("<xmlattr>");
+
+                        categories.emplace_back(
+                            category_attr_node.get<std::string>("term"),
+                            category_attr_node.get_optional<std::string>(
+                                "scheme"),
+                            category_attr_node.get_optional<std::string>(
+                                "label"));
+                    } else if (entry_child.first == "contributor") {
+                        const auto &contributor_node = entry_child.second;
+
+                        contributors.emplace_back(
+                            contributor_node.get<std::string>("name"),
+                            contributor_node.get_optional<std::string>("email"),
+                            contributor_node.get_optional<std::string>("uri"));
                     }
 
                 if (!authors.empty())
@@ -288,6 +321,12 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
 
                 if (!links.empty())
                     entry.links_.emplace(std::move(links));
+
+                if (!categories.empty())
+                    entry.categories_.emplace(std::move(categories));
+
+                if (!contributors.empty())
+                    entry.contributors_.emplace(std::move(contributors));
 
                 data.entries_.emplace_back(std::move(entry));
             }
@@ -305,8 +344,8 @@ boost::optional<atom_data> atom_parser::parse(const std::string &uri) {
             data.contributors_.emplace(std::move(contributors));
 
         return std::move(data);
-    } catch (...) {
-        std::cerr << "Error!" << std::endl;
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
     }
 
     return {};
