@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0)
 
-project(feed_parser)
+project(feed_parser CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
