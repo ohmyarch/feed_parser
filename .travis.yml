@@ -8,6 +8,8 @@ compiler:
 
 arch:
   packages:
+    - clang
+    - libc++
     - cpprestsdk-git
   script:
     - "git submodule init"
