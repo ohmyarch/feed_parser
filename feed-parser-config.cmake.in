@@ -1,0 +1,7 @@
+# - Config file for the feed_parser package
+# It defines the following variables
+#  FEED_PARSER_FOUND        - indicates that the module was found
+#  FEED_PARSER_INCLUDE_DIRS - include directories for FooBar
+#  FEED_PARSER_LIBRARIES    - libraries to link against
+
+get_filename_component(FEED_PARSER_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" DIRECTORY)

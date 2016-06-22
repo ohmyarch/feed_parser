@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5.2)
 
-project(feed_parser CXX)
+project(feed_parser VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -74,7 +74,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-set(FEED_PARSER_LIBRARY ${LIB}feedparser)
+set(CONFIG_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}")
 
 add_subdirectory(src)
 

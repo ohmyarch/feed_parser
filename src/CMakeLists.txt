@@ -2,9 +2,9 @@ if(UNIX)
   add_definitions(-DHAS_REMOTE_API=0)
 endif()
 
-add_library(${FEED_PARSER_LIBRARY} ../feed/date_time/tz.cpp atom_parser.cc rss_parser.cc)
+add_library(feedparser ../feed/date_time/tz.cpp atom_parser.cc rss_parser.cc)
 
-target_link_libraries(${FEED_PARSER_LIBRARY}
+target_link_libraries(feedparser
   ${OPENSSL_LIBRARIES}
   ${CASABLANCA_LIBRARIES}
   ${Boost_SYSTEM_LIBRARY}
@@ -15,19 +15,15 @@ target_link_libraries(${FEED_PARSER_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT}
   )
 
-set (FEED_PARSER_VERSION_MAJOR 0)
-set (FEED_PARSER_VERSION_MINOR 1)
-set (FEED_PARSER_VERSION_REVISION 0)
-
 if(WIN32)
-  set_target_properties(${FEED_PARSER_LIBRARY} PROPERTIES
-    OUTPUT_NAME "${FEED_PARSER_LIBRARY}_${FEED_PARSER_VERSION_MAJOR}_${FEED_PARSER_VERSION_MINOR}")
+  set_target_properties(feedparser PROPERTIES
+    OUTPUT_NAME "${PROJECT_VERSION_MAJOR}_${PROJECT_VERSION_MINOR}_${PROJECT_VERSION_PATCH}")
 else()
-  set_target_properties(${FEED_PARSER_LIBRARY} PROPERTIES
-    SOVERSION ${FEED_PARSER_VERSION_MAJOR}.${FEED_PARSER_VERSION_MINOR})
+  set_target_properties(feedparser PROPERTIES
+    SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
 
   install(
-    TARGETS ${FEED_PARSER_LIBRARY}
+    TARGETS feedparser
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     )
