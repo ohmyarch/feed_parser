@@ -1,6 +1,8 @@
 add_executable(parser_rss parser_rss.cc)
 add_executable(parser_atom parser_atom.cc)
 
+set(FEED_PARSER_LIBRARY ${LIB}feedparser)
+
 set(FEED_PARSER_LIBRARIES
   ${Boost_LIBRARIES}
   ${OPENSSL_LIBRARIES}
