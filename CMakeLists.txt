@@ -74,8 +74,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-set(CONFIG_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}")
-
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/feed_parser/feed_parser-config-version.cmake"
+  COMPATIBILITY AnyNewerVersion
+)
 
 add_subdirectory(src)
 
