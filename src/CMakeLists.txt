@@ -75,7 +75,5 @@ else()
       COMPONENT
         Devel
     )
-
-    export(PACKAGE feed_parser)
   endif()
 endif()
