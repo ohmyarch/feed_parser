@@ -11,12 +11,6 @@ option(BUILD_SHARED_LIBS "Build shared Libraries." ON)
 
 if(UNIX)
   option(FEED_PARSER_INSTALL_HEADERS "Install header files." ON)
-  if(FEED_PARSER_INSTALL_HEADERS)
-    file(GLOB FEED_PARSER_HEADERS_FEED feed/*.h)
-    install(FILES ${FEED_PARSER_HEADERS_FEED} DESTINATION include/feed)
-    file(GLOB FEED_PARSER_HEADERS_DATE_TIME feed/date_time/tz.h feed/date_time/date.h feed/date_time/tz_private.h)
-    install(FILES ${FEED_PARSER_HEADERS_DATE_TIME} DESTINATION include/feed/date_time)
-  endif()
 
   if(APPLE AND NOT OPENSSL_ROOT_DIR)
     file(GLOB OPENSSL_ROOT_DIR /usr/local/Cellar/openssl/*)
@@ -73,12 +67,6 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/feed_parser/feed_parser-config-version.cmake"
-  COMPATIBILITY AnyNewerVersion
-)
 
 add_subdirectory(src)
 
