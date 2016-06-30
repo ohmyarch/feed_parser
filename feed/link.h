@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include <string>
 #include <boost/optional.hpp>
 
 namespace feed {
