@@ -71,6 +71,18 @@ class cloud {
         return register_procedure_;
     }
 
+    cloud &operator=(cloud &&other) noexcept {
+        if (&other != this) {
+            domain_ = std::move(other.domain_);
+            path_ = std::move(other.path_);
+            port_ = other.port_;
+            protocol_ = other.protocol_;
+            register_procedure_ = std::move(other.register_procedure_);
+        }
+
+        return *this;
+    }
+
   private:
     friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
@@ -81,9 +93,9 @@ class cloud {
     std::uint16_t port_; // Port the cloud server is running on.
     enum protocol
         protocol_; // Protocol to use for communications with the cloud
-                   // server (xml-rpc or soap).
+    // server (xml-rpc or soap).
     std::string register_procedure_; // Name of procedure to call to request
-                                     // notification.
+    // notification.
 };
 
 class image {
@@ -103,6 +115,19 @@ class image {
     const boost::optional<std::uint16_t> &height() const { return height_; }
     const boost::optional<std::string> &description() const {
         return description_;
+    }
+
+    image &operator=(image &&other) noexcept {
+        if (&other != this) {
+            url_ = std::move(other.url_);
+            title_ = std::move(other.title_);
+            link_ = std::move(other.link_);
+            width_ = other.width_;
+            height_ = other.height_;
+            description_ = std::move(other.description_);
+        }
+
+        return *this;
     }
 
   private:
@@ -130,6 +155,17 @@ class text_input {
     const std::string &description() const { return description_; }
     const std::string &name() const { return name_; }
     const std::string &link() const { return link_; }
+
+    text_input &operator=(text_input &&other) noexcept {
+        if (&other != this) {
+            title_ = std::move(other.title_);
+            description_ = std::move(other.description_);
+            name_ = std::move(other.name_);
+            link_ = std::move(other.link_);
+        }
+
+        return *this;
+    }
 
   private:
     friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
@@ -165,8 +201,17 @@ class itunes {
         return new_feed_url_;
     }
 
+    itunes &operator=(itunes &&other) noexcept {
+        if (&other != this) {
+            new_feed_url_ = std::move(other.new_feed_url_);
+        }
+
+        return *this;
+    }
+
   private:
-    friend boost::optional<rss::rss_data> rss::parse_rss(const std::string &xml_str);
+    friend boost::optional<rss::rss_data>
+    rss::parse_rss(const std::string &xml_str);
 
     itunes() {}
 
@@ -213,7 +258,7 @@ class guid {
 
     std::string value_;
     bool is_perma_link_; // If its value is false, the guid may not be assumed
-                         // to be a url, or a url to anything in particular.
+    // to be a url, or a url to anything in particular.
 };
 
 class source {
@@ -286,7 +331,7 @@ class item {
         comments_; // URL of a page for comments relating to the item.
     boost::optional<class enclosure>
         enclosure_; // Describes a media object that
-                    // is attached to the item.
+    // is attached to the item.
     boost::optional<class guid>
         guid_; // A string that uniquely identifies the item.
     boost::optional<std::chrono::time_point<std::chrono::system_clock,
@@ -367,6 +412,34 @@ class rss_data {
         return itunes_;
     }
 
+    rss_data &operator=(rss_data &&other) noexcept {
+        if (&other != this) {
+            title_ = std::move(other.title_);
+            link_ = std::move(other.link_);
+            description_ = std::move(other.description_);
+            language_ = std::move(other.language_);
+            copyright_ = std::move(other.copyright_);
+            managing_editor_ = std::move(other.managing_editor_);
+            web_master_ = std::move(other.web_master_);
+            pub_date_ = other.pub_date_;
+            last_build_date_ = other.last_build_date_;
+            categories_ = std::move(other.categories_);
+            generator_ = std::move(other.generator_);
+            docs_ = std::move(other.docs_);
+            cloud_ = std::move(other.cloud_);
+            ttl_ = other.ttl_;
+            image_ = std::move(other.image_);
+            text_input_ = std::move(other.text_input_);
+            skip_hours_ = std::move(other.skip_hours_);
+            skip_days_ = std::move(other.skip_days_);
+            items_ = std::move(other.items_);
+            atom_link_ = std::move(other.atom_link_);
+            itunes_ = std::move(other.itunes_);
+        }
+
+        return *this;
+    }
+
   private:
     friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
 
@@ -381,10 +454,10 @@ class rss_data {
     boost::optional<std::string>
         copyright_; // Copyright notice for content in the channel.
     boost::optional<std::string> managing_editor_; // Email address for person
-                                                   // responsible for editorial
-                                                   // content.
-    boost::optional<std::string> web_master_;      // Email address for person
-                                                   // responsible for technical
+    // responsible for editorial
+    // content.
+    boost::optional<std::string> web_master_; // Email address for person
+    // responsible for technical
     // issues relating to channel.
     boost::optional<std::chrono::time_point<std::chrono::system_clock,
                                             std::chrono::seconds>>
@@ -394,8 +467,8 @@ class rss_data {
         last_build_date_;
     boost::optional<std::vector<class category>> categories_;
     boost::optional<std::string> generator_; // A string indicating the program
-                                             // used to generate the channel.
-    boost::optional<std::string> docs_;      // A URL that points to the
+    // used to generate the channel.
+    boost::optional<std::string> docs_; // A URL that points to the
     // documentation for the format used in
     // the RSS file.
     boost::optional<class cloud>
@@ -404,8 +477,8 @@ class rss_data {
     // implements the RssCloud application
     // programming interface.
     boost::optional<std::uint16_t> ttl_; // a number of minutes that indicates
-                                         // how long a channel can be cached
-                                         // before refreshing from the source
+    // how long a channel can be cached
+    // before refreshing from the source
     boost::optional<class image> image_; // Specifies a GIF, JPEG or PNG image
     // that can be displayed with the
     // channel.
@@ -413,13 +486,13 @@ class rss_data {
     // that can be displayed with
     // the channel.
     boost::optional<std::vector<std::uint16_t>> skip_hours_; // A hint for
-                                                             // aggregators
-                                                             // telling them
-                                                             // which days they
-                                                             // can skip.
+    // aggregators
+    // telling them
+    // which days they
+    // can skip.
     boost::optional<std::vector<day>> skip_days_; // A hint for aggregators
-                                                  // telling them which days
-                                                  // they can skip.
+    // telling them which days
+    // they can skip.
     std::vector<item> items_;
     boost::optional<class atom::link>
         atom_link_; // A relationship between a web

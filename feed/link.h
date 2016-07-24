@@ -28,8 +28,8 @@
 
 #pragma once
 
-#include <string>
 #include <boost/optional.hpp>
+#include <string>
 
 namespace feed {
 namespace rss {
@@ -67,8 +67,22 @@ class link {
     const boost::optional<std::string> &type() const { return type_; }
     const boost::optional<enum rel> &rel() const { return rel_; }
 
+    link &operator=(link &&other) noexcept {
+        if (&other != this) {
+            href_ = std::move(other.href_);
+            href_lang_ = std::move(other.href_lang_);
+            length_ = other.length_;
+            title_ = std::move(other.title_);
+            type_ = std::move(other.type_);
+            rel_ = other.rel_;
+        }
+
+        return *this;
+    }
+
   private:
-    friend boost::optional<rss::rss_data> rss::parse_rss(const std::string &xml_str);
+    friend boost::optional<rss::rss_data>
+    rss::parse_rss(const std::string &xml_str);
     friend boost::optional<atom_data> parse_atom(const std::string &xml_str);
 
     link() {}
