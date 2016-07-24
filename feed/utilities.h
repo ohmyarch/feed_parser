@@ -45,6 +45,8 @@ class xml {
 
             return conversions::to_utf8string(
                 response.get().extract_string(true).get()); // FIXME
+        } catch (const web::uri_exception &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
         } catch (const web::http::http_exception &e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }
