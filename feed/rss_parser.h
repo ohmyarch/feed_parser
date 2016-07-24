@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <feed/link.h>
 
 namespace feed {
@@ -343,6 +344,7 @@ class item {
 
 class rss_data {
   public:
+    rss_data() {}
     rss_data(rss_data &&other) noexcept
         : title_(std::move(other.title_)),
           link_(std::move(other.link_)),
@@ -442,8 +444,6 @@ class rss_data {
 
   private:
     friend boost::optional<rss_data> parse_rss(const std::string &xml_str);
-
-    rss_data() {}
 
     std::string title_; // The name of the channel.
     std::string
