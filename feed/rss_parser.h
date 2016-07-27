@@ -41,8 +41,10 @@ class category {
              boost::optional<std::string> &&domain) noexcept
         : value_(std::move(value)),
           domain_(std::move(domain)) {}
+    category(const category &other)
+        : value_(other.value_), domain_(other.domain_) {}
     category(category &&other) noexcept : value_(std::move(other.value_)),
-                                          domain_(std::move(other.value_)) {}
+                                          domain_(std::move(other.domain_)) {}
 
     const std::string &value() const { return value_; }
     const boost::optional<std::string> &domain() const { return domain_; }
@@ -57,6 +59,10 @@ enum class protocol : std::uint8_t { xml_rpc, soap };
 
 class cloud {
   public:
+    cloud(const cloud &other)
+        : domain_(other.domain_), path_(other.path_), port_(other.port_),
+          protocol_(other.protocol_),
+          register_procedure_(other.register_procedure_) {}
     cloud(cloud &&other) noexcept
         : domain_(std::move(other.domain_)),
           path_(std::move(other.path_)),
@@ -101,6 +107,10 @@ class cloud {
 
 class image {
   public:
+    image(const image &other)
+        : url_(other.url_), title_(other.title_), link_(other.link_),
+          width_(other.width_), height_(other.height_),
+          description_(other.description_) {}
     image(image &&other) noexcept
         : url_(std::move(other.url_)),
           title_(std::move(other.title_)),
@@ -146,6 +156,9 @@ class image {
 
 class text_input {
   public:
+    text_input(const text_input &other)
+        : title_(other.title_), description_(other.description_),
+          name_(other.name_), link_(other.link_) {}
     text_input(text_input &&other) noexcept
         : title_(std::move(other.title_)),
           description_(std::move(other.description_)),
@@ -195,6 +208,7 @@ enum class day : std::uint8_t {
 namespace channel {
 class itunes {
   public:
+    itunes(const itunes &other) : new_feed_url_(other.new_feed_url_) {}
     itunes(itunes &&other) noexcept
         : new_feed_url_(std::move(other.new_feed_url_)) {}
 
@@ -226,6 +240,8 @@ class enclosure {
               std::string &&type) noexcept : url_(std::move(url)),
                                              length_(length),
                                              type_(std::move(type)) {}
+    enclosure(const enclosure &other)
+        : url_(other.url_), length_(other.length_), type_(other.type_) {}
     enclosure(enclosure &&other) noexcept : url_(std::move(other.url_)),
                                             length_(other.length_),
                                             type_(std::move(other.type_)) {}
@@ -248,6 +264,8 @@ class guid {
          const boost::optional<bool> &is_perma_link) noexcept
         : value_(std::move(value)),
           is_perma_link_(is_perma_link ? is_perma_link.value() : true) {}
+    guid(const guid &other)
+        : value_(other.value_), is_perma_link_(other.is_perma_link_) {}
     guid(guid &&other) noexcept : value_(std::move(other.value_)),
                                   is_perma_link_(other.is_perma_link_) {}
 
@@ -267,6 +285,7 @@ class source {
     source(std::string &&value, std::string &&url) noexcept
         : value_(std::move(value)),
           url_(std::move(url)) {}
+    source(const source &other) : value_(other.value_), url_(other.url_) {}
     source(source &&other) noexcept : value_(std::move(other.value_)),
                                       url_(std::move(other.url_)) {}
 
@@ -284,6 +303,12 @@ class source {
 // description must be present.
 class item {
   public:
+    item(const item &other)
+        : title_(other.title_), link_(other.link_),
+          description_(other.description_), author_(other.author_),
+          categories_(other.categories_), comments_(other.comments_),
+          enclosure_(other.enclosure_), guid_(other.guid_),
+          pub_date_(other.pub_date_), source_(other.source_) {}
     item(item &&other) noexcept : title_(std::move(other.title_)),
                                   link_(std::move(other.link_)),
                                   description_(std::move(other.description_)),
@@ -345,6 +370,19 @@ class item {
 class rss_data {
   public:
     rss_data() {}
+    rss_data(const rss_data &other)
+        : title_(other.title_), link_(other.link_),
+          description_(other.description_), language_(other.language_),
+          copyright_(other.copyright_),
+          managing_editor_(other.managing_editor_),
+          web_master_(other.web_master_), pub_date_(other.pub_date_),
+          last_build_date_(other.last_build_date_),
+          categories_(other.categories_), generator_(other.generator_),
+          docs_(other.docs_), cloud_(other.cloud_), ttl_(other.ttl_),
+          image_(other.image_), text_input_(other.text_input_),
+          skip_hours_(other.skip_hours_), skip_days_(other.skip_days_),
+          items_(other.items_), atom_link_(other.atom_link_),
+          itunes_(other.itunes_) {}
     rss_data(rss_data &&other) noexcept
         : title_(std::move(other.title_)),
           link_(std::move(other.link_)),

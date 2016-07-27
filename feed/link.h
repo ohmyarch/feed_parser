@@ -53,6 +53,10 @@ class atom_data;
 
 class link {
   public:
+    link(const link &other)
+        : href_(other.href_), href_lang_(other.href_lang_),
+          length_(other.length_), title_(other.title_), type_(other.type_),
+          rel_(other.rel_) {}
     link(link &&other) noexcept : href_(std::move(other.href_)),
                                   href_lang_(std::move(other.href_lang_)),
                                   length_(other.length_),
