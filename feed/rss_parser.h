@@ -205,19 +205,43 @@ enum class day : std::uint8_t {
     sunday
 };
 
-namespace channel {
-class itunes {
+namespace itunes {
+class image {
   public:
-    itunes(const itunes &other) : new_feed_url_(other.new_feed_url_) {}
-    itunes(itunes &&other) noexcept
-        : new_feed_url_(std::move(other.new_feed_url_)) {}
+    image(const image &other) : href_(other.href_) {}
+    image(image &&other) noexcept : href_(std::move(other.href_)) {}
 
+    const std::string &href() const { return href_; }
+
+    image &operator=(image &&other) noexcept {
+        if (&other != this) {
+            href_ = std::move(other.href_);
+        }
+
+        return *this;
+    }
+
+  private:
+    std::string href_;
+};
+
+namespace channel_level {
+class itunes_extensions {
+  public:
+    itunes_extensions(const itunes_extensions &other)
+        : image_(other.image_), new_feed_url_(other.new_feed_url_) {}
+    itunes_extensions(itunes_extensions &&other) noexcept
+        : image_(std::move(other.image_)),
+          new_feed_url_(std::move(other.new_feed_url_)) {}
+
+    const boost::optional<class image> &image() const { return image_; }
     const boost::optional<std::string> &new_feed_url() const {
         return new_feed_url_;
     }
 
-    itunes &operator=(itunes &&other) noexcept {
+    itunes_extensions &operator=(itunes_extensions &&other) noexcept {
         if (&other != this) {
+            image_ = std::move(other.image_);
             new_feed_url_ = std::move(other.new_feed_url_);
         }
 
@@ -228,11 +252,13 @@ class itunes {
     friend boost::optional<rss::rss_data>
     rss::parse_rss(const std::string &xml_str);
 
-    itunes() {}
+    itunes_extensions() {}
 
+    boost::optional<class image> image_;
     boost::optional<std::string> new_feed_url_;
 };
-}
+};
+};
 
 class enclosure {
   public:
@@ -448,7 +474,8 @@ class rss_data {
     const boost::optional<class atom::link> &atom_link() const {
         return atom_link_;
     }
-    const boost::optional<class channel::itunes> &itunes() const {
+    const boost::optional<class itunes::channel_level::itunes_extensions> &
+    itunes() const {
         return itunes_;
     }
 
@@ -536,7 +563,7 @@ class rss_data {
         atom_link_; // A relationship between a web
     // resource (such as a page) and an
     // RSS channel or item.
-    boost::optional<class channel::itunes> itunes_;
+    boost::optional<class itunes::channel_level::itunes_extensions> itunes_;
 };
 
 boost::optional<rss_data> parse_rss(const std::string &xml_str);

@@ -127,7 +127,8 @@ boost::optional<rss_data> parse_rss(const std::string &xml_str) {
             if (xmlns_itunes_node)
                 if (xmlns_itunes_node.value() ==
                     "http://www.itunes.com/dtds/podcast-1.0.dtd") {
-                    channel::itunes itunes;
+                    itunes::channel_level::itunes_extensions itunes;
+                    ;
                     itunes.new_feed_url_ =
                         channel_node.get_optional<std::string>(
                             "itunes:new-feed-url");
